@@ -8,8 +8,8 @@ def format_input(inp):
 def sol(inp):
     inp = format_input(inp)
     ss = map(sum, inp)
-    st = sorted(ss)[::-1]
-    print(sum(st[:3]))
+    from heapq import nlargest
+    print(sum(nlargest(3, ss)))
 
-t = open("test.txt", 'r').read()
+t = open("input.txt", 'r').read()
 sol(t)
