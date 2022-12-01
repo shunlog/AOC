@@ -5,17 +5,16 @@ def format_input(inp):
     inp = [[int(x) for x in s.splitlines()] for s in inp]
     return inp
 
-def sol1(inp):
-    inp = format_input(inp)
+def sol(inp, part2=False):
     ss = map(sum, inp)
-    print(max(ss))
+    if not part2:
+        return max(ss)
+    else:
+        from heapq import nlargest
+        return sum(nlargest(3, ss))
 
-def sol2(inp):
+if __name__ == "__main__":
+    inp = open("input.txt", 'r').read()
     inp = format_input(inp)
-    ss = map(sum, inp)
-    from heapq import nlargest
-    print(sum(nlargest(3, ss)))
-
-t = open("input.txt", 'r').read()
-sol1(t)
-sol2(t)
+    print(sol(inp))
+    print(sol(inp, True))
