@@ -1,48 +1,47 @@
 #!/bin/env python3
 from icecream import ic
 
-def format_input(inp):
-    inp = [(l.split()) for l in inp.splitlines()]
-    ic(inp)
-    inp = [(ord(l[0])-ord('A')+1, ord(l[1])-ord('X')+1) for l in inp]
-    ic(inp)
-    return inp
-
 # 1st wins
 # 1 3
 # 2 1
 # 3 2
-#   ^ shifted down (shift == 1)
+#   ^ (shift == 2)
 # draw
 # 1 1
 # 2 2
 # 3 3
-# 2nd wins (shift == 0)
+# (shift == 0)
+# 2nd wins
 # 1 2
 # 2 3
 # 3 1
-#   ^ shifted up (shift == 2)
+#   ^ (shift == 1)
+
+def format_input(inp):
+    inp = [(l.split()) for l in inp.splitlines()]
+    ic(inp)
+    inp = [(ord(l[0])-ord('A'), ord(l[1])-ord('X')) for l in inp]
+    ic(inp)
+    return inp
+
+wt = [0, 3, 6]
+p2sh = [2, 0, 1]
+stw = [1, 2, 0]
 
 def score1(p):
-    shp = {0: 3,
-           1: 0,
-           2: 6}
-    sh = (p[0] - p[1]) % 3
-    return shp[sh] + p[1]
+    sh = (p[1] - p[0]) % 3
+    ws = wt[stw[sh]]
+    ic(ws)
+    return ws + p[1] + 1
 
-def score2(l):
-    t = [[3, 1, 2],
-         [1, 2, 3],
-         [2, 3, 1]]
-    s = t[ord(l[2])-ord('X')][ord(l[0])-ord('A')]
-    if l[2] == 'X':
-        s += 0
-    if l[2] == 'Y':
-        s += 3
-    if l[2] == 'Z':
-        s += 6
-    ic(s)
-    return s
+def score2(p):
+    ic(p)
+    w = wt[p[1]]
+    ic(w)
+    p2 = (p[0] + p2sh[p[1]]) % 3 + 1
+    ic(p2)
+    return w + p2
+
 
 def sol(inp, part2=False):
     s = 0
@@ -51,8 +50,26 @@ def sol(inp, part2=False):
     else:
         return sum(map(score2, inp))
 
-if __name__ == "__main__":
+def test():
     inp = open("test.txt", 'r').read()
     inp = format_input(inp)
     print(sol(inp))
     # print(sol(inp, True))
+
+def p2():
+    ic.disable()
+    inp = open("input.txt", 'r').read()
+    inp = format_input(inp)
+    print(sol(inp, True))
+
+
+def p1():
+    ic.disable()
+    inp = open("input.txt", 'r').read()
+    inp = format_input(inp)
+    print(sol(inp))
+
+if __name__ == "__main__":
+    # test()
+    p1()
+    # p2()
