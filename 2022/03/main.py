@@ -23,8 +23,7 @@ def halve(l):
 
 def p1(inp):
     inp = inp.splitlines()
-    sp = [list(map(set, halve(l))) for l in inp]
-    repeated = [p[0] & p[1] for p in sp]
+    repeated = [set.intersection(*map(set, halve(l))) for l in inp]
     s = sum((sum((pr(i) for i in l)) for l in repeated))
     return s
 
