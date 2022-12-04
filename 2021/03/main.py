@@ -11,6 +11,9 @@ def p1(inp):
     return gamma * eps
 
 def p2(inp):
+    inp = inp.splitlines()
+    trans = list(zip(*inp))
+    ic(trans)
     return 0
 
 if __name__ == "__main__":
