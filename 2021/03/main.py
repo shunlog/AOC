@@ -10,11 +10,31 @@ def p1(inp):
     eps = 2**len(trans) - gamma - 1
     return gamma * eps
 
+def transpose(l):
+    return list(zip(*l))
+
+def most_common(l):
+    return int(sum(l) >= len(l)/2)
+
+def least_common(l):
+    return int(not most_common(l))
+
 def p2(inp):
-    inp = inp.splitlines()
-    trans = list(zip(*inp))
-    ic(trans)
-    return 0
+    inp = [[int(i) for i in l] for l in inp.splitlines()]
+    ogr = inp.copy()
+    csr = inp.copy()
+    for i in range(len(ogr[0])):
+        mc = most_common(transpose(ogr)[i])
+        ogr = list(filter(lambda l: l[i] == mc, ogr))
+        if len(ogr) == 1:
+            break
+    for i in range(len(csr[0])):
+        lc = least_common(transpose(csr)[i])
+        csr = list(filter(lambda l: l[i] == lc, csr))
+        if len(csr) == 1:
+            break
+    to_int = lambda l: int(''.join(map(str,l)), 2)
+    return to_int(ogr[0]) * to_int(csr[0])
 
 if __name__ == "__main__":
     import sys
