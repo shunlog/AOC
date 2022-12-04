@@ -6,20 +6,15 @@ def contains(r1, r2):
 
 def p1(inp):
     inp = [[list(map(int, r.split('-'))) for r in pair.split(',')] for pair in inp.splitlines()]
-    n = 0
-    for p in inp:
-        n += int(contains(p[0], p[1]) or contains(p[1], p[0]))
-    return n
+    contain = lambda p: contains(p[0], p[1]) or contains(p[1], p[0])
+    return sum(map(contain, inp))
 
 def overlap(r1, r2):
     return not (r1[1] < r2[0] or r1[0] > r2[1])
 
 def p2(inp):
     inp = [[list(map(int, r.split('-'))) for r in pair.split(',')] for pair in inp.splitlines()]
-    n = 0
-    for p in inp:
-        n += int(overlap(p[0], p[1]))
-    return n
+    return sum(map(lambda p: int(overlap(*p)), inp))
 
 if __name__ == "__main__":
     import sys
