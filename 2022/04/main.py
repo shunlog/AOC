@@ -9,12 +9,12 @@ def p1(inp):
     contain = lambda p: contains(p[0], p[1]) or contains(p[1], p[0])
     return sum(map(contain, inp))
 
-def overlap(r1, r2):
-    return not (r1[1] < r2[0] or r1[0] > r2[1])
+def overlap(p):
+    return not (p[0][1] < p[1][0] or p[0][0] > p[1][1])
 
 def p2(inp):
     inp = [[list(map(int, r.split('-'))) for r in pair.split(',')] for pair in inp.splitlines()]
-    return sum(map(lambda p: int(overlap(*p)), inp))
+    return sum(map(overlap, inp))
 
 if __name__ == "__main__":
     import sys
