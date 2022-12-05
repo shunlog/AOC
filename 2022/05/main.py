@@ -9,15 +9,8 @@ def solve(inp, part2=False):
     inp = inp.splitlines()[:-1]
     ins = [[int(l.split(" ")[i]) for i in [1, 3, 5]] for l in ins.splitlines()]
 
-    arr = []
-    import re
-    for l in inp:
-        l = l.ljust(len(inp[-1]))
-        t = re.findall(r'(    )|(?:\[(\w)\])', l)
-        t = [p[1] for p in t]
-        arr.append(t)
-    tr = transpose(arr)
-    cr = [list(filter(lambda x: x!='', l)) for l in tr]
+    cr = [l.ljust(len(inp[-1]))[1::4] for l in inp]
+    cr = [[x for x in l if x != ' '] for l in transpose(cr)]
 
     for l in ins:
         n, s, d = l
