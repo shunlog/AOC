@@ -1,16 +1,16 @@
 #!/bin/env python3
 from icecream import ic
+from collections import Counter
 
 def solve(inp, n):
-    from collections import Counter
     c = Counter()
     for i, ch in enumerate(inp):
         c[ch] += 1
-        if i >= n:
-            c[inp[i-n]] -= 1
-            if c[inp[i-n]] == 0:
-                del c[inp[i-n]]
-        ic(c)
+        if i < n:
+            continue
+        c[inp[i-n]] -= 1
+        if c[inp[i-n]] == 0:
+            del c[inp[i-n]]
         if len(c.keys()) == n:
             return i + 1
     return -1
