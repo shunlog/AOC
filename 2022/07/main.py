@@ -8,59 +8,54 @@ def p1(inp):
     MAX = 100000
     inp = inp.splitlines()
     dirs = []
-    lvl = 0
     size = defaultdict(int)
     for l in inp:
-        plvl = lvl
-
         t = l.split()
         if t[0] == '$':
            if t[1] == 'cd':
                if t[2] == '..':
-                   lvl -= 1
+                   dirs.pop()
                else:
-                   dirs.append(t[2])
-                   lvl += 1
+                   dirs.append("/".join(dirs)+t[2])
         elif t[0] == 'dir':
            pass
         else:
            s = int(t[0])
+           assert(len(dirs) > 0)
            for d in dirs:
                size[d] += s
+    ic(size)
 
-        if lvl < plvl:
-            dirs.pop()
-
-    return sum([s for d,s in size.items() if s < MAX])
+    return sum([s for d,s in size.items() if s <= MAX])
 
 def p2(inp):
-    MAX = 100000
+    TOTAL= 70000000
+    NEED = 30000000
+
     inp = inp.splitlines()
     dirs = []
-    lvl = 0
     size = defaultdict(int)
     for l in inp:
-        plvl = lvl
-
         t = l.split()
         if t[0] == '$':
            if t[1] == 'cd':
                if t[2] == '..':
-                   lvl -= 1
+                   dirs.pop()
                else:
-                   dirs.append(t[2])
-                   lvl += 1
+                   dirs.append("/".join(dirs)+t[2])
         elif t[0] == 'dir':
            pass
         else:
            s = int(t[0])
+           assert(len(dirs) > 0)
            for d in dirs:
                size[d] += s
+    USED = size['/']
+    ic(USED)
+    UNUSED = TOTAL - USED
+    DEL = NEED - UNUSED
 
-        if lvl < plvl:
-            dirs.pop()
-
-    return sum([s for d,s in size.items() if s < MAX])
+    return min(filter(lambda s: s >= DEL, size.values()))
 
 if __name__ == "__main__":
     import sys
