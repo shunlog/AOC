@@ -27,11 +27,48 @@ def p1(inp):
             if dist(ph, pt) > 1:
                 pt = pph
                 v[pt] += 1
-    ic(v)
+                ic(v)
     return len(v.keys())
 
+def move_head(p, d):
+    if d == 'R':
+        p[0] += 1
+    elif d == 'L':
+        p[0] -= 1
+    elif d == 'U':
+        p[1] -= 1
+    elif d == 'D':
+        p[1] += 1
+    return p
+
+def sign(n):
+    return 1 if n >= 0 else -1
+
+def far(a, b):
+    return abs(a[0]-b[0]) > 1 or abs(a[1]-b[1]) > 1
+
+def follow(b, a):
+    if far(a, b):
+        if abs(a[0] - b[0]) > 0:
+            b[0] += 1 * sign(a[0] - b[0])
+        if abs(a[1] - b[1]) > 0:
+            b[1] += 1 * sign(a[1] - b[1])
+    return b
+
 def p2(inp):
-    return 0
+    inp = inp.splitlines()
+    pk = [[0, 0] for i in range(10)]
+    v = dict()
+    v[tuple(pk[-1])] = True
+
+    for l in inp:
+        d, s = l.split()
+        for i in range(int(s)):
+            pk[0] = move_head(pk[0], d)
+            for n in range(1, 10):
+                pk[n] = follow(pk[n], pk[n-1])
+            v[tuple(pk[-1])] = True
+    return len(v.keys())
 
 if __name__ == "__main__":
     import sys
