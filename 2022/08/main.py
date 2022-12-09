@@ -1,57 +1,29 @@
 #!/bin/env python3
 from icecream import ic
 
-def transpose(l):
-    return list(map(list,zip(*l)))
+def visible_in_line(l):
+    mx = -1
+    v = []
+    for h in l:
+        v.append(True if h > mx else False)
+        mx = max(h, mx)
+    return v
 
 def p1(inp):
-    hm = [[int(n) for n in l] for l in inp.splitlines()]
-    W = len(hm[0])
-    H = len(hm)
-    ic(hm)
-    v = [[False] * W for i in range(H)]
+    inp = [[int(n) for n in l] for l in inp.splitlines()]
+    s = len(inp)
+    v = [[False] * s for i in range(s)]
+    for n in range(s):
+        for i in range(s):
+            v[n][i] |= visible_in_line((inp[n][i] for i in range(s)))[i]
+            v[n][i] |= visible_in_line((inp[n][i] for i in range(s-1,-1,-1)))[s-i-1]
+            v[i][n] |= visible_in_line((inp[i][n] for i in range(s)))[i]
+            v[i][n] |= visible_in_line((inp[i][n] for i in range(s-1,-1,-1)))[s-i-1]
 
-    for y in range(H):
-        maxh = -1
-        for i,h in enumerate(hm[y]):
-            if h > maxh:
-                maxh = h
-                v[y][i] = True
+    return sum([sum(map(int, l)) for l in v])
 
-    for y in range(H):
-        maxh = -1
-        for i,h in zip(range(W-1,0-1,-1),hm[y][::-1]):
-            if h > maxh:
-                maxh = h
-                v[y][i] = True
-
-    hm = transpose(hm)
-    v = transpose(v)
-
-    for y in range(H):
-        maxh = -1
-        for i,h in enumerate(hm[y]):
-            if h > maxh:
-                maxh = h
-                v[y][i] = True
-
-    for y in range(H):
-        maxh = -1
-        for i,h in zip(range(W-1,0-1,-1),hm[y][::-1]):
-            if h > maxh:
-                maxh = h
-                v[y][i] = True
-
-    hm = transpose(hm)
-    v = transpose(v)
-
-    ic(v)
-    vc = 0
-    for i in v:
-        for j in i:
-            vc += int(j)
-
-    return vc
+def transpose(l):
+    return list(map(list,zip(*l)))
 
 def swallow(l, n):
     for i,v in enumerate(l):
