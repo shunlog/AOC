@@ -9,10 +9,34 @@ def easy(h1, h2):
         return True
     return False
 
+def getedges(mp):
+    W, H = len(mp[0]), len(mp)
+    edges = []
+    for y,l in enumerate(mp):
+        for x,h in enumerate(l):
+            if x < W - 1:
+                hd = mp[y][x+1]
+                if easy(h, hd):
+                    edges.append(((x,y), (x+1,y),1))
+            if y < H - 1:
+                hd = mp[y+1][x]
+                if easy(h, hd):
+                    edges.append(((x,y), (x,y+1),1))
+            if x != 0:
+                hd = mp[y][x-1]
+                if easy(h, hd):
+                    edges.append(((x,y), (x-1,y),1))
+            if y != 0:
+                hd = mp[y-1][x]
+                if easy(h, hd):
+                    edges.append(((x,y), (x,y-1),1))
+    return edges
+
 def p1(inp):
-    mp = []
     start = fin = None
     starts = []
+
+    mp = []
     for y,l in enumerate(inp.splitlines()):
         mp.append([])
         for x,ch in enumerate(l):
@@ -27,45 +51,11 @@ def p1(inp):
             if ch in ['a', 'S']:
                 starts.append((x,y))
             mp[y].append(ch)
+
     assert start
     assert fin
 
-    edges = []
-    for y,l in enumerate(mp):
-        for x,h in enumerate(l):
-            try:
-                hd = mp[y][x+1]
-                if easy(h, hd):
-                    edges.append(((x,y), (x+1,y),1))
-                    ic(h, hd)
-            except:
-                pass
-            try:
-                hd = mp[y+1][x]
-                if easy(h, hd):
-                    edges.append(((x,y), (x,y+1),1))
-                    ic(h, hd)
-            except:
-                pass
-            try:
-                if x == 0:
-                    raise
-                hd = mp[y][x-1]
-                if easy(h, hd):
-                    edges.append(((x,y), (x-1,y),1))
-                    ic(h, hd)
-            except:
-                pass
-            try:
-                if y == 0:
-                    raise
-                hd = mp[y-1][x]
-                if easy(h, hd):
-                    edges.append(((x,y), (x,y-1),1))
-                    ic(h, hd)
-            except:
-                pass
-
+    edges = getedges(mp)
     g = dijkstra.Graph()
     for e in edges:
         g.add_edge(e[0], e[1], e[2])
@@ -75,16 +65,12 @@ def p1(inp):
     return dist
 
 def p2(inp):
-    mp = []
-    start = fin = None
+    fin = None
     starts = []
+    mp = []
     for y,l in enumerate(inp.splitlines()):
         mp.append([])
         for x,ch in enumerate(l):
-            if ch == 'S':
-                start = (x,y)
-                mp[y].append('a')
-                continue
             if ch == 'E':
                 fin = (x,y)
                 mp[y].append('z')
@@ -92,58 +78,18 @@ def p2(inp):
             if ch in ['a', 'S']:
                 starts.append((x,y))
             mp[y].append(ch)
-    assert start
-    assert fin
 
-    edges = []
-    for y,l in enumerate(mp):
-        for x,h in enumerate(l):
-            try:
-                hd = mp[y][x+1]
-                if easy(h, hd):
-                    edges.append(((x,y), (x+1,y),1))
-                    ic(h, hd)
-            except:
-                pass
-            try:
-                hd = mp[y+1][x]
-                if easy(h, hd):
-                    edges.append(((x,y), (x,y+1),1))
-                    ic(h, hd)
-            except:
-                pass
-            try:
-                if x == 0:
-                    raise
-                hd = mp[y][x-1]
-                if easy(h, hd):
-                    edges.append(((x,y), (x-1,y),1))
-                    ic(h, hd)
-            except:
-                pass
-            try:
-                if y == 0:
-                    raise
-                hd = mp[y-1][x]
-                if easy(h, hd):
-                    edges.append(((x,y), (x,y-1),1))
-                    ic(h, hd)
-            except:
-                pass
-
+    edges = getedges(mp)
     g = dijkstra.Graph()
     for e in edges:
         g.add_edge(e[1], e[0], e[2])
-
-    mind = 100000000000
-
     d = dijkstra.DijkstraSPF(g, fin)
 
+    dist = []
     for start in starts:
-        dist = d.get_distance(start)
-        mind = min(mind, dist)
+        dist.append(d.get_distance(start))
 
-    return mind
+    return min(dist)
 
 if __name__ == "__main__":
     import sys
