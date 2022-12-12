@@ -133,13 +133,14 @@ def p2(inp):
 
     g = dijkstra.Graph()
     for e in edges:
-        g.add_edge(e[0], e[1], e[2])
+        g.add_edge(e[1], e[0], e[2])
 
     mind = 100000000000
 
+    d = dijkstra.DijkstraSPF(g, fin)
+
     for start in starts:
-        d = dijkstra.DijkstraSPF(g, start)
-        dist = d.get_distance(fin)
+        dist = d.get_distance(start)
         mind = min(mind, dist)
 
     return mind
