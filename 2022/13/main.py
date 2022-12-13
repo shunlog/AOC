@@ -1,10 +1,10 @@
 #!/bin/env python3
+import functools
 from icecream import ic
 
 # -1 if l1 < l2
 # 0 if l1 = l2
 # 1 if l1 > l2
-# 3379 too low
 
 def cmp_ints(i1, i2):
     if i1 < i2:
@@ -43,8 +43,12 @@ def p1(inp):
     return s
 
 def p2(inp):
-    ic(inp.splitlines())
-    return 0
+    el = [eval(l) for l in (filter(lambda x: x, inp.splitlines()))]
+    l1, l2 = [[2]], [[6]]
+    el += [l1, l2]
+
+    sl = sorted(el, key=functools.cmp_to_key(cmp_expr))
+    return (sl.index(l1) + 1) * (sl.index(l2) + 1)
 
 if __name__ == "__main__":
     import sys
