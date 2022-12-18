@@ -1,4 +1,5 @@
 #!/bin/env python3
+from itertools import *
 from icecream import ic
 
 blocks_raw = '''####
@@ -23,88 +24,64 @@ blocks_raw = '''####
 blocks = []
 for bl in blocks_raw.split('\n\n'):
     b = {}
-    for y, l in enumerate(bl.split('\n')[::-1]):
+    for y, l in enumerate(bl.splitlines()[::-1]):
         for x, ch in enumerate(l):
             if ch == "#":
                 b[(x,y)] = True
     blocks.append(b)
 ic(blocks)
 
-def move(dx, dy, b):
-    '''
-    Return false if movement didn't take place
-    '''
-    global board
-    newb = {(xy[0] + dx, xy[1] + dy): True for xy,v in b.items()}
-    for xy in b.keys():
-        if board.get(xy) or xy[1] < 0 or xy[0] < 0 or xy[0] > 6:
-            return False
-    return newb
+def move(block, dx, dy, board):
+    nblock = {(x+dx, y+dy):True for x,y in block.keys()}
+    for x,y in nblock.keys():
+        if (x,y) in board.keys() or x < 0 or x > 6 or y < 0:
+            return block
+    return nblock
 
-def move_left(b):
-    newb = move(-1, 0, b)
-    if not newb:
-        newb = b
+def spawn(i, board, h):
+    global blocks
+    b = {(x+2, y+h+3):True for x,y in blocks[i].keys()}
     return b
 
-def move_right(b):
-    newb = move(1, 0, b)
-    if not newb:
-        newb = b
-    return b
+def freeze_block(b, board, h):
+    board.update(b)
+    newh = max([y+1 for x,y in b.keys()])
+    return board, max(newh, h)
 
-def fall(b):
-    '''
-    Return False if the block doesn't fall further
-    '''
-    return move(0, -1, b)
-
-def spawn(bi):
-    global board
-    global h
-    x = 2
-    y = h + 3
-    return {(xy[0][0] + x, xy[0][1] + y): True for xy in blocks[bi].items()}
-
-def add_block(block):
-    global board
-    global h
-    board.update(block)
-    bh = max(v[1] for v in block.keys())
-    h = max(h, bh)
-
-def show(block):
-    global board
-    global h
-    for y in range(h+3-1, -1, -1):
+def show(board, block, h):
+    newh = max([y+1 for x,y in block.keys()])
+    h = max(newh, h)
+    for y in range(h, -1, -1):
         for x in range(7):
-            ch = '#' if board.get((x,y)) or block.get((x,y)) else ' '
+            ch = '#' if (x,y) in board or (x,y) in block else ' '
             print(ch, end='')
         print()
 
-board = {}
-h = 0
-
 def p1(inp):
+    board = {}
+    h = 0
+
     bi = 0
-    block = spawn(bi)
-    for dir in inp:
+    block = spawn(bi, board, h)
+    cnt = 1
+    for dir in cycle(inp):
         if dir == '<':
-            block = move_left(block)
+            block = move(block, -1, 0, board)
         else:
-            block = move_right(block)
+            block = move(block, 1, 0, board)
 
-        nblock = fall(block)
-        if not nblock:
-            add_block(block)
-            bi = (bi + 1) % 5
-            block = spawn(bi)
-        else:
-            block = nblock
-        ic(block)
-        print("Moved",dir)
-        show(block)
+        prev = block
+        block = move(block, 0, -1, board)
+        if block == prev:
+            board, h = freeze_block(block, board, h)
+            bi = (bi + 1) % len(blocks)
+            block = spawn(bi, board, h)
+            cnt += 1
+            ic(cnt)
+            if cnt == 2023:
+                break
 
+    # show(board, block, h)
     return h
 
 def p2(inp):
