@@ -29,7 +29,6 @@ for bl in blocks_raw.split('\n\n'):
             if ch == "#":
                 b[(x,y)] = True
     blocks.append(b)
-ic(blocks)
 
 def move(block, dx, dy, board):
     nblock = {(x+dx, y+dy):True for x,y in block.keys()}
@@ -57,14 +56,31 @@ def show(board, block, h):
             print(ch, end='')
         print()
 
-def p1(inp):
+def solve(inp, bcnt):
     board = {}
     h = 0
 
     bi = 0
     block = spawn(bi, board, h)
     cnt = 1
-    for dir in cycle(inp):
+    loopstarth = 0
+    blockstartcnt = 0
+    prevlooph = -1
+    prevblockloopcnt = -1
+    cumloopsum = 0
+    for i,dir in enumerate(cycle(inp)):
+        if i % len(inp) == 0:
+            looph = h - loopstarth
+            loopblockcnt = cnt - blockstartcnt
+            if looph == prevlooph and prevblockloopcnt == loopblockcnt:
+                cumloopsum = looph * ((bcnt - cnt) // loopblockcnt)
+                cnt += (bcnt - cnt) // loopblockcnt * loopblockcnt
+                ic(looph, loopblockcnt, h, cnt)
+
+            prevlooph = looph
+            prevblockloopcnt = loopblockcnt
+            blockstartcnt = cnt
+            loopstarth = h
         if dir == '<':
             block = move(block, -1, 0, board)
         else:
@@ -77,15 +93,17 @@ def p1(inp):
             bi = (bi + 1) % len(blocks)
             block = spawn(bi, board, h)
             cnt += 1
-            ic(cnt)
-            if cnt == 2023:
+            if cnt > bcnt:
                 break
 
     # show(board, block, h)
-    return h
+    return h + cumloopsum
+
+def p1(inp):
+    return solve(inp, 2022)
 
 def p2(inp):
-    return 0
+    return solve(inp, 1000000000000)
 
 if __name__ == "__main__":
     import sys
