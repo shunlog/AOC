@@ -31,24 +31,24 @@ for bl in blocks_raw.split('\n\n'):
     blocks.append(b)
 
 def move(block, dx, dy, board):
-    nblock = {(x+dx, y+dy):True for x,y in block.keys()}
-    for x,y in nblock.keys():
-        if (x,y) in board.keys() or x < 0 or x > 6 or y < 0:
+    nblock = {(x+dx, y+dy):True for x,y in block}
+    for x,y in nblock:
+        if (x,y) in board or x < 0 or x > 6 or y < 0:
             return block
     return nblock
 
 def spawn(i, board, h):
     global blocks
-    b = {(x+2, y+h+3):True for x,y in blocks[i].keys()}
+    b = {(x+2, y+h+3) for x,y in blocks[i]}
     return b
 
 def freeze_block(b, board, h):
     board.update(b)
-    newh = max([y+1 for x,y in b.keys()])
+    newh = max([y+1 for x,y in b])
     return board, max(newh, h)
 
 def show(board, block, h):
-    newh = max([y+1 for x,y in block.keys()])
+    newh = max([y+1 for x,y in block])
     h = max(newh, h)
     for y in range(h, -1, -1):
         for x in range(7):
