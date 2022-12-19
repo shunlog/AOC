@@ -13,35 +13,7 @@ def bfs(bp, ores, bots, t):
     '''Return the maximum number of geodes produced from current time till end'''
     if t > 24:
         return ores
-    memores = mem[tuple([bots, t])]
-    if all(memo >= o for memo, o in zip(memores, ores)):
-        return memores
-
-    oldores = ores
-    ores = tuple(o+b for o,b in zip(ores, bots))
-
-    maxores = ores
-    bestbots = bots
-
-    newores = bfs(bp, ores, bots, t+1)
-    if maxores[-1] <= newores[-1]:
-        maxores = newores
-        bestbots = bots
-
-    for bi,botbp in enumerate(bp):
-        if not all(oldores[i] >= botbp[i] for i in range(4)):
-            continue
-        newores = tuple(ore - bpore for ore, bpore in zip(ores, botbp))
-        newbots = tuple(bc + 1 if i == bi else bc for i,bc in enumerate(bots))
-        newores = bfs(bp, newores, newbots, t+1)
-        if maxores[-1] < newores[-1]:
-            bestbots = newbots
-            maxores = newores
-
-    memores = mem[tuple([bestbots, t])]
-    if all(memo < o for memo, o in zip(memores, maxores)):
-        mem[tuple([bestbots, t])] = maxores
-    return maxores
+    return ores
 
 
 def p1(inp):
@@ -57,10 +29,6 @@ def p1(inp):
         global mem
         mem = defaultdict(lambda: tuple([-1, -1, -1, -1]))
         v = bfs(bp, (0, 0, 0, 0), (1, 0, 0, 0), 1)
-        for bt,o in mem.items():
-            b, t = bt
-            if t == 24 and b[0] == 1 and b[1] == 4:
-                ic(b,t,o)
         ic(bp, v)
 
     return 0
