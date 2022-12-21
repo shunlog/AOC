@@ -8,14 +8,9 @@ def p1(inp):
         t = l.split()
         if len(t) == 2:
             e = f"{int(t[1])}"
-            ic(e)
-            d[t[0][:-1]] = lambda d, e=e: eval(e)
         else:
             e = f"d['{t[1]}'](d) " + t[2] + f" d['{t[3]}'](d)"
-            ic(e)
-            d[t[0][:-1]] = lambda d, e=e: eval(e)
-
-    ic(d)
+        d[t[0][:-1]] = lambda d, e=e: eval(e)
 
     return int(d['root'](d))
 
