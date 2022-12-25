@@ -13,7 +13,7 @@ digits = {
 sdigits = {value: key for key, value in digits.items()}
 
 def tosnafu(n):
-    digc = math.floor(math.log(n, 5)) + 1
+    digc = math.ceil(math.log(n, 5))
     sn = ""
     pn = n
     for i in range(digc, -1, -1):
@@ -21,7 +21,7 @@ def tosnafu(n):
         cur =  (n+rest) // (5**i)
         sn += sdigits[cur]
         n -= cur * (5**i)
-    while sn[0] == '0':
+    if sn[0] == '0':
         sn = sn[1:]
     assert todec(sn) == pn
     return sn
@@ -35,12 +35,10 @@ def p1(inp):
         n = todec(sn)
         nl.append(n)
 
-    # for i in range(1, 100):
-    #     ic(i, tosnafu(i))
-
     return tosnafu(sum(nl))
 
 def p2(inp):
+    ic("There's no part 2! Solve all the previous days to finish this one.")
     return 0
 
 if __name__ == "__main__":
