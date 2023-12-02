@@ -1,0 +1,68 @@
+:PROPERTIES:
+:ID:       d4e62baa-207f-4604-a6c1-4468eac29d5e
+:END:
+#+title: AOC 2017 day 1
+#+PROPERTY: header-args:python  :noweb yes
+[[id:5f81fa6c-10f0-45c5-ac7d-0ad944c1e423][AOC]] problem.
+Tryna make some simple check-expect tests with this one.
+So far no luck.
+
+#+name: test1
+#+begin_src python :results none
+def test1(foo):
+    try:
+        expected = 4
+        got = foo("1111")
+        assert got == expected, (expected, got)
+        expected = 4
+        inp = "1234"
+        got = foo(inp)
+        assert got == expected, (inp, expected, got)
+    except AssertionError as e:
+        return e.args[0]
+    else:
+        return "All good!"
+#+end_src
+
+
+#+begin_src python
+def sol1v1(n):
+    return sum([int(n[i]) if n[i] == n[(i+1) % len(n)] else 0 for i in range(len(n))])
+
+<<test1>>
+return test1(sol1v1)
+#+end_src
+
+#+RESULTS:
+| 1234 | 4 | 0 |
+
+#+begin_src python
+def scroll(a, i):
+   return a[i:] + a[:-i-1]
+
+def sol1v2(n):
+    return sum([int(a) if a == b else 0 for a, b in zip(n, scroll(n, 1))])
+
+def rule(a, b):
+    return int(a) if a == b else 0
+
+def sol1v3(n):
+    return sum(map(rule, n, scroll(n, 1)))
+def sol2v3(n):
+    return sum(map(rule, n, scroll(n, len(n)//2)))
+
+print(sol1v3("1234"))
+print(sol1v3("1111"))
+
+def sol1v3_oneline(n, part2=False):
+    i = len(n)//2 if part2 else 1
+    return list(map(lambda a, b: int(a) if a == b else 0, n, n[i:] + n[:-i-1]))
+
+print(sol2v3("1221"))
+print(sol2v3("1212"))
+print(sol1v3_oneline("1221"))
+print(sol1v3_oneline("1212", True))
+#+end_src
+
+#+RESULTS:
+: None

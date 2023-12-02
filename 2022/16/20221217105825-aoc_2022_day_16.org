@@ -1,0 +1,15 @@
+:PROPERTIES:
+:ID:       d4f2720a-9c48-4147-8433-2c6135ba5e2b
+:END:
+#+title: AOC 2022 day 16
+The most difficult problem this year so far.
+In the first 17 hours, barely 5k have gotten both, and less than 5k got only silver.
+
+Got "inspired" (read cheated) from this [[https://www.reddit.com/r/adventofcode/comments/zn6k1l/comment/j0fp12q/?utm_source=reddit&utm_medium=web2x&context=3][solution on reddit]].
+
+It's interesting that there are so many different approaches on reddit.
+
+For =part1=, obtain the pairwise distance matrix between all the non-zero valves using Floyd-Warshall, then do a DFS on all the permutations of paths, stopping when time runs out.
+Although there are =15!= permutations, since there are =15= valves, only =194063= fit the time limit, so it's more than possible to brute-force. On my laptop it only takes =1.6= seconds.
+
+For =part2=, do the same as in =part1=, except save a map of =set of open valves -> pressure= when reaching the end of a permutation. Then, find the pair of =set of open valves= that maximizes the total pressure. Of course it takes extra computation, but since the time has been reduced to =26= minutes, the number of possible permutations drops to =44324=. On my laptop it runs in =13= seconds.

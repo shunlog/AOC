@@ -1,0 +1,62 @@
+:PROPERTIES:
+:ID:       cebe0d29-7d01-4732-8788-00f4782d76e7
+:END:
+#+title: AOC 2021 day 1
+[[https://adventofcode.com/2021/day/1][Day 1 - Advent of Code 2021]]
+
+Get the test data:
+#+name: data
+#+begin_src python :var fn="test1"
+data = open(f"/home/awh/Projects/mine/aoc/2021/01/{fn}.txt", 'r').read()
+return list(map(int, data.split()))
+#+end_src
+
+#+RESULTS: data
+| 199 | 200 | 208 | 210 | 200 | 207 | 240 | 269 | 260 | 263 |
+
+* Part 1
+Let's just do a map on the list of pairs.
+
+First, get the pairwise list by =zip=-ing the list to itself.
+#+name: pairs
+#+begin_src python :var d=data
+return list(zip(d, d[1:]))
+#+end_src
+
+#+RESULTS: pairs
+| 199 | 200 |
+| 200 | 208 |
+| 208 | 210 |
+| 210 | 200 |
+| 200 | 207 |
+| 207 | 240 |
+| 240 | 269 |
+| 269 | 260 |
+| 260 | 263 |
+
+Now =map= it, returning =1= if second element is larger
+and =0= otherwise.
+#+name: map
+#+begin_src python :var ps=pairs
+return list(map(lambda p: int(p[1] > p[0]), ps))
+#+end_src
+
+#+RESULTS: map
+| 1 | 1 | 1 | 0 | 1 | 1 | 1 | 0 | 1 |
+
+Now we can obtain the count of wanted pairs:
+#+name: sol
+#+begin_src python :var m=map
+return sum(m)
+#+end_src
+
+#+RESULTS: sol
+: 7
+
+Checking with the big input:
+#+call: sol(map(pairs(data("part1"))))
+
+#+RESULTS:
+: 1387
+
+And sure enough, this is the right answer.
