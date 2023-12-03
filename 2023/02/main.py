@@ -1,13 +1,11 @@
 #!/bin/env python3
 from icecream import ic
-import itertools
-import operator
 
 def count_colors(s):
     # "3 blue, 4 red" --> (4, 0, 3)
     d = {'red': 0, 'green': 0, 'blue': 0}
     for p in s.split(','):
-        n, col = ic(p.split())
+        n, col = p.split()
         d[col] = int(n)
     return (d['red'], d['green'], d['blue'])
 
