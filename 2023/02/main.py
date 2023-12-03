@@ -30,14 +30,13 @@ def p1(l):
 def p2(l):
     left, right = l.split(":")
     trips = [count_colors(s) for s in right.split(";")] # list of triples (r, g, b)
-    minset = [0, 0, 0]
-    for trip in trips:
-        for i in range(3):
-            minset[i] = max(minset[i], trip[i])
+    minset = (max(c) for c in zip(*trips))
     return math.prod(minset)
 
 
 def solve(inp, part2=False):
+    # Both parts sum the values of the lines,
+    # the only difference is in how each line is valued
     foo = p2 if part2 else p1
     return sum(foo(l) for l in inp.splitlines())
 
