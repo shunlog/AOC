@@ -1,5 +1,6 @@
 #!/bin/env python3
 from icecream import ic
+import math
 
 def count_colors(s):
     # "3 blue, 4 red" --> (4, 0, 3)
@@ -33,7 +34,7 @@ def p2(l):
     for trip in trips:
         for i in range(3):
             minset[i] = max(minset[i], trip[i])
-    return minset[0] * minset[1] * minset[2]
+    return math.prod(minset)
 
 
 def solve(inp, part2=False):
