@@ -9,7 +9,11 @@ def solve(inp, part2=False):
     # rec = (t - x) * x
     # x**2 - t*x + rec = 0
 
-    tl, recl = ([int(n) for n in l.split()[1:]] for l in inp.splitlines())
+    if not part2:
+        tl, recl = ([int(n) for n in l.split()[1:]] for l in inp.splitlines())
+    else:
+        tl, recl = ([int(''.join(l.split()[1:]))] for l in inp.splitlines())
+        ic(tl, recl)
 
     prod = 1
     for t, rec in zip(tl, recl):
