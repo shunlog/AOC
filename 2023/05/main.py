@@ -1,7 +1,6 @@
 #!/bin/env python3
 from icecream import ic
-from more_itertools import ichunked, chunked
-from random import shuffle
+from more_itertools import ichunked
 import queue
 
 
@@ -16,9 +15,8 @@ def intersect(a, b):
 
 
 def p2(inp):
-    # Check ranges instead of values.
-    # For each paragraph, "silt" the seed ranges through the "filter" ranges
-    # by going through each pair of source range and map
+    # We gotta check entire ranges instead of values.
+    # An entire range can be "mapped" by finding the intersection.
 
     def map_ranges(src, maps):
         '''Apply the list of maps from a paragraph to all the ranges.
@@ -26,11 +24,22 @@ def p2(inp):
         maps = [((2, 3) -5), ...]'''
 
         def map_range(r):
-            # get a list of intersecting maps (for optimization)
-            intersecting_maps = [mp for mp in maps if intersect(r, mp[0])]
+            '''A source range can be filtered by multiple maps.
+            When it intersects with a map, it can be:
+            1) mapped fully,
+            2) split into 2
+            3) split into 3
+            If a range doesn't intersect with any map, we add it to `dest` as-is.
+            Othewise, we only add the mapped intersection,
+            then push the splits (if any) in a queue,
+            and check them over every single map again, until the queue is empty.
+            '''
+
+            # only check against intersecting maps (faster, since we're doing multiple passes)
+            intersecting_maps = [m for m in maps if intersect(r, m[0])]
 
             # use a queue to pass all the range parts through the maps
-            Q = queue.Queue()
+            Q = queue.SimpleQueue()
             Q.put(r)
             while not Q.empty():
                 r = Q.get()
@@ -56,8 +65,8 @@ def p2(inp):
                 else: # this range didn't intersect with any map
                     dest.append(r)
 
-        dest = []
         ic(len(src))
+        dest = []
         for r in src:
             map_range(r)
 
@@ -113,11 +122,11 @@ def p1(inp):
 
     return min(dest)
 
+
 def solve(inp, part2=False):
     if part2:
         return p2(inp)
     return p1(inp)
-
 
 
 if __name__ == "__main__":
