@@ -41,6 +41,7 @@ def hand_type(h, part2=False):
         return 6
     assert False
 
+
 def test_hand_type():
     assert hand_type('AAAAA') == 0
     assert hand_type('AA2AA') == 1
@@ -63,7 +64,7 @@ def key_func(h, part2=False):
     A, K, Q, J, T ->
     E, D, C, B, A
     '''
-    J_subst = 'B' if not part2 else '1'
+    J_subst = 'B' if not part2 else '1' # in part2, Jokers are rated the lowest
     return h.replace('A', 'E')\
         .replace('K', 'D')\
         .replace('Q', 'C')\
@@ -84,11 +85,9 @@ def solve(inp, part2=False):
     # sort the hands in each group
     for l in groups:
         l.sort(key=lambda h: key_func(h, part2))
-    ic(groups)
 
     s = 0
     for rank, hand in enumerate(chain(*groups), start=1):
-        ic(rank, hand)
         s += d[hand] * rank
 
     return s
