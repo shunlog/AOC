@@ -45,11 +45,53 @@ def find_path(m):
 
     S = find_S(m)
     path = [S, find_next_pipe(m, S)]
-    while path[-1] != S:
-        npos = find_next_pipe(m, path[-1], path[-2])
+    while (npos := find_next_pipe(m, path[-1], path[-2])) != S:
         path.append(npos)
 
     return path
+
+
+def enclosed_area(m, loop):
+    '''Return the number of tiles enclosed by the loop.
+    - `m` is the matrix
+    - `loop` is a set of coordinates'''
+
+    h, w = len(m), len(m[0])
+
+    def inside_loop(x, y):
+        '''Use ray casting to determine if point (x, y) is inside loop.'''
+        ic(x, y)
+
+        if (x, y) in loop:
+            return False
+
+        # count hits
+        cnt = 0
+        # pick shortest ray
+        r = range(x+1, w) if x > w//2 else range(x-1, -1, -1)
+        for nx in r:
+            if (nx, y) in loop and (m[y][nx] not in ('-', '7', 'F', 'S')):
+                cnt += 1
+
+        if cnt % 2 == 0:
+            return False
+
+        ic(x, y, m[y][x], cnt)
+        return True
+
+    return sum(int(inside_loop(x, y)) for y in range(h) for x in range(w))
+
+
+def loop_to_str(m, loop):
+    s = ''
+    for y, row in enumerate(m):
+        for x, ch in enumerate(row):
+            if (x, y) not in loop:
+                s += ' '
+                continue
+            s += ch
+        s += '\n'
+    return s
 
 
 def solve(inp, part2=False):
@@ -58,6 +100,8 @@ def solve(inp, part2=False):
 
     if not part2:
         return len(path) // 2
+
+    return enclosed_area(m, set(path))
 
 
 if __name__ == "__main__":
