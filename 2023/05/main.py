@@ -14,63 +14,63 @@ def intersect(a, b):
     return (max(a[0], b[0]), min(a[1], b[1]))
 
 
+def map_ranges(src, maps):
+    '''Apply the list of maps from a paragraph to all the ranges.
+    rc = [(1, 10), ...]
+    maps = [((2, 3) -5), ...]'''
+
+    def map_range(r):
+        '''A source range can be filtered by multiple maps.
+        When it intersects with a map, it can be:
+        1) mapped fully,
+        2) split into 2
+        3) split into 3
+        If a range doesn't intersect with any map, we add it to `dest` as-is.
+        Othewise, we only add the mapped intersection,
+        then push the splits (if any) in a queue,
+        and check them over every single map again, until the queue is empty.
+        '''
+
+        # only check against intersecting maps (faster, since we're doing multiple passes)
+        intersecting_maps = [m for m in maps if intersect(r, m[0])]
+
+        # use a queue to pass all the range parts through the maps
+        Q = queue.SimpleQueue()
+        Q.put(r)
+        while not Q.empty():
+            r = Q.get()
+            for mr, offset in intersecting_maps:
+                I = intersect(r, mr)
+                if not I:
+                    continue
+
+                # add the intersection
+                I2 = (I[0] + offset, I[1] + offset) # apply offset
+                dest.append(I2)
+
+                # push the split ranges back to the queue, if any
+                r_left = (r[0], I[0]-1)
+                if r_left[0] <= r_left[1]:
+                    Q.put(r_left)
+                r_right = (I[1]+1, r[1])
+                if r_right[0] <= r_right[1]:
+                    Q.put(r_right)
+
+                break # go back to check the split ranges
+
+            else: # this range didn't intersect with any map
+                dest.append(r)
+
+    ic(len(src))
+    dest = []
+    for r in src:
+        map_range(r)
+    return dest
+
+
 def p2(inp):
     # We gotta check entire ranges instead of values.
     # An entire range can be "mapped" by finding the intersection.
-
-    def map_ranges(src, maps):
-        '''Apply the list of maps from a paragraph to all the ranges.
-        rc = [(1, 10), ...]
-        maps = [((2, 3) -5), ...]'''
-
-        def map_range(r):
-            '''A source range can be filtered by multiple maps.
-            When it intersects with a map, it can be:
-            1) mapped fully,
-            2) split into 2
-            3) split into 3
-            If a range doesn't intersect with any map, we add it to `dest` as-is.
-            Othewise, we only add the mapped intersection,
-            then push the splits (if any) in a queue,
-            and check them over every single map again, until the queue is empty.
-            '''
-
-            # only check against intersecting maps (faster, since we're doing multiple passes)
-            intersecting_maps = [m for m in maps if intersect(r, m[0])]
-
-            # use a queue to pass all the range parts through the maps
-            Q = queue.SimpleQueue()
-            Q.put(r)
-            while not Q.empty():
-                r = Q.get()
-                for mr, offset in intersecting_maps:
-                    I = intersect(r, mr)
-                    if not I:
-                        continue
-
-                    # add the intersection
-                    I2 = (I[0] + offset, I[1] + offset) # apply offset
-                    dest.append(I2)
-
-                    # push the split ranges back to the queue, if any
-                    r_left = (r[0], I[0]-1)
-                    if r_left[0] <= r_left[1]:
-                        Q.put(r_left)
-                    r_right = (I[1]+1, r[1])
-                    if r_right[0] <= r_right[1]:
-                        Q.put(r_right)
-
-                    break # go back to check the split ranges
-
-                else: # this range didn't intersect with any map
-                    dest.append(r)
-
-        ic(len(src))
-        dest = []
-        for r in src:
-            map_range(r)
-
-        return dest
 
     # parse input: seeds, maps_list
     pl = inp.split('\n\n')
