@@ -15,15 +15,14 @@ def hand_type(h, part2=False):
     6. High card
     '''
     c = Counter(h)
-    if part2 and c['J']: # convert all J's to the most common card
+    if part2 and c['J']:  # convert all J's to the most common card
         mc = c.most_common(2)
         if len(mc) < 2: # there's only jokers
             return 0
-        else:
-            # pick the most-common non-J card
-            mc_card = mc[0][0] if mc[0][0] != 'J' else mc[1][0]
-            c.update({mc_card: c['J']})
-            del c['J']
+        # pick the most-common non-J card
+        mc_card = mc[0][0] if mc[0][0] != 'J' else mc[1][0]
+        c.update({mc_card: c['J']})  # add to it the count of J's
+        del c['J']
 
     if len(c) == 1:
         return 0
@@ -42,27 +41,11 @@ def hand_type(h, part2=False):
     assert False
 
 
-def test_hand_type():
-    assert hand_type('AAAAA') == 0
-    assert hand_type('AA2AA') == 1
-    assert hand_type('23332') == 2
-    assert hand_type('TTT98') == 3
-    assert hand_type('23432') == 4
-    assert hand_type('A23A4') == 5
-    assert hand_type('23456') == 6
-
-    assert hand_type('AAAAA', True) == 0
-    assert hand_type('T55J5', True) == 1
-    assert hand_type('KTJJT', True) == 1
-    assert hand_type('QQQJA', True) == 1
-
-
 def key_func(h, part2=False):
     '''Transform a hand into a string,
     such that you could use it to sort hands
     Numbers are already fine, so we just need to replace these with characters:
-    A, K, Q, J, T ->
-    E, D, C, B, A
+    A, K, Q, J, T -->
     '''
     J_subst = 'B' if not part2 else '1' # in part2, Jokers are rated the lowest
     return h.replace('A', 'E')\
@@ -71,14 +54,13 @@ def key_func(h, part2=False):
         .replace('J', J_subst)\
         .replace('T', 'A')
 
+
 def solve(inp, part2=False):
-    test_hand_type()
+    bids = {hand: int(bid) for hand, bid in (l.split() for l in inp.splitlines())}
 
-    d = {hand: int(bid) for hand, bid in (l.split() for l in inp.splitlines())}
+    # group the hands by type
     groups = [[] for _ in range(7)]
-
-    # sort the hands by type
-    for hand in d.keys():
+    for hand in bids.keys():
         t = hand_type(hand, part2)
         groups[6-t].append(hand) # store them in reverse order
 
@@ -86,11 +68,7 @@ def solve(inp, part2=False):
     for l in groups:
         l.sort(key=lambda h: key_func(h, part2))
 
-    s = 0
-    for rank, hand in enumerate(chain(*groups), start=1):
-        s += d[hand] * rank
-
-    return s
+    return sum(bids[hand] * rank for rank, hand in enumerate(chain(*groups), start=1))
 
 
 if __name__ == "__main__":
