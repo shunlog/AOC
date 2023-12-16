@@ -15,8 +15,10 @@ class Coord:
         if isinstance(other, Coord):
             return Coord(other.x + self.x, other.y + self.y)
 
+
 @dataclass
 class Beam:
+    '''Beam of light, located at pos, and oriented in direction dir.'''
     pos: Coord
     dir: Coord
 
@@ -80,16 +82,19 @@ def traverse(m, initial_beam=Beam(Coord(0, 0), RIGHT)):
             case '.':
                 beam.pos += beam.dir
                 beams.put(beam)
+
             case '/':
                 beam.dir = reflected_fwd[beam.dir]
                 beam.pos += beam.dir
                 beams.put(beam)
+
             case '\\':
                 ic("bckwd", beam)
                 beam.dir = reflected_bkwd[beam.dir]
                 beam.pos += beam.dir
                 ic("bckwd", beam)
                 beams.put(beam)
+
             case '|':
                 if beam.vert():
                     beam.pos += beam.dir
@@ -97,6 +102,7 @@ def traverse(m, initial_beam=Beam(Coord(0, 0), RIGHT)):
                     continue
                 beams.put(Beam(beam.pos + UP, UP))
                 beams.put(Beam(beam.pos + DOWN, DOWN))
+
             case '-':
                 if beam.horiz():
                     beam.pos += beam.dir
@@ -104,6 +110,7 @@ def traverse(m, initial_beam=Beam(Coord(0, 0), RIGHT)):
                     continue
                 beams.put(Beam(beam.pos + RIGHT, RIGHT))
                 beams.put(Beam(beam.pos + LEFT, LEFT))
+
             case _:
                 raise ValueError("Bad character in input")
 
@@ -111,32 +118,31 @@ def traverse(m, initial_beam=Beam(Coord(0, 0), RIGHT)):
 
 
 def count_energized(traversed):
-    def print_traversed():
-        s = ''
-        for l in traversed:
-            for d in l:
-                s += '#' if any(d) else '.'
-            s += '\n'
-        print(s)
-
-
-    # print_traversed()
     return sum(1 if any(d) else 0 for l in traversed for d in l)
 
 
+def print_traversed(traversed):
+    s = ''
+    for l in traversed:
+        for d in l:
+            s += '#' if any(d) else '.'
+        s += '\n'
+    print(s)
+
+
 def solve(inp, part2=False):
-    # m = matrix of characters
+    # use list of strings for the board
     m = [l for l in inp.splitlines()]
 
     if not part2:
         return count_energized(traversed)
 
     max_energized = 0
-    for coord, direction in chain(zip(((0, y) for y in range(len(m))), [RIGHT]*len(m)),
-             zip(((len(m[0])-1, y) for y in range(len(m))), [LEFT]*len(m)) ,
-             zip(((x, 0) for x in range(len(m[0]))), [DOWN]*len(m[0])) ,
-             zip(((x, len(m)-1) for x in range(len(m[0]))), [UP]*len(m[0]))) :
-        ic(coord, direction)
+    w, h = len(m[0]), len(m)
+    for coord, direction in chain(zip(((0, y) for y in range(h)), [RIGHT]*h),
+             zip(((w-1, y) for y in range(h)), [LEFT]*h),
+             zip(((x, 0) for x in range(w)), [DOWN]*w),
+             zip(((x, h-1) for x in range(w)), [UP]*w)):
         traversed = traverse(m, Beam(Coord(*coord), direction))
         energized = count_energized(traversed)
         max_energized = max(max_energized, energized)
