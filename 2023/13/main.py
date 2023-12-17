@@ -6,66 +6,38 @@ def transpose(m):
     return [*map(list, zip(*m))]
 
 
-def find_mirror(m):
-    ''' Finds the mirror position in the pattern matrix m.
-    Returns tuple:
-    - [0]: col/row after which is the split (0-indexed)
-    - [1]: True if horizontal mirror, False if vertical.'''
-
-    def test_column(m, i):
-        '''Returns True if the mirror is after column i'''
-        for r in m:
-            left = r[:i+1]
-            right = r[i+1:]
-            if not all(p[0] == p[1] for p in zip(left[::-1], right)):
-                return False
-        return True
-
-    def find_vertical(m):
-        '''Returns column after which is the mirror, or False'''
-        for i in range(len(m[0])-1):
-            if test_column(m, i):
-                return i
-        return False
-
-
-    if type(i := find_vertical(m)) != bool:
-        return (i, False)
-
-    return (find_vertical(transpose(m)), True)
-
-
-def find_mirror2(m):
+def find_mirror(m, part2):
     ''' The same as find_mirror,
     but there has to be exactly one error (smudge).'''
 
-    def test_column_errors(m, i):
-        '''Returns the number of errors if the mirror is after column i'''
-        # TODO
-        s = 0
-        for r in m:
-            left = r[:i+1]
-            right = r[i+1:]
-            s += sum(int(p[0] != p[1]) for p in zip(left[::-1], right))
-            ic(i, r, s)
-        return s
-
     def find_vertical(m):
-        '''Returns column after which is the mirror, or False'''
+        '''Returns column after which the mirror can be, or False'''
+
+        def count_errors_in_column(m, i):
+            '''Returns the number of errors (smudges) if the mirror is after column i'''
+            s = 0
+            for r in m:
+                left = r[:i+1]
+                right = r[i+1:]
+                s += sum(int(p[0] != p[1]) for p in zip(left[::-1], right))
+            return s
+
         for i in range(len(m[0])-1):
-            if test_column_errors(m, i) == 1:
+            if count_errors_in_column(m, i) == (1 if part2 else 0):
                 return i
         return False
 
-    if type(i := find_vertical(m)) != bool:
+    # try all vertical positions
+    if not isinstance(i := find_vertical(m), bool):
         return (i, False)
 
+    # else try all horizontal positions
     return (find_vertical(transpose(m)), True)
 
 
 def value(m, part2):
-    '''Returns value of pattern for part 1'''
-    i, horiz = find_mirror2(m) if part2 else find_mirror(m)
+    '''Returns the value of pattern'''
+    i, horiz = find_mirror(m, part2)
     if horiz:
         return 100 * (i + 1)
     return i + 1
@@ -73,7 +45,6 @@ def value(m, part2):
 
 def solve(inp, part2=False):
     patterns = [p.splitlines() for p in inp.split('\n\n')]
-
     return sum(value(m, part2) for m in patterns)
 
 
