@@ -67,6 +67,33 @@ def test_find_mirror(m, expected):
 @pytest.mark.parametrize(
     "m, expected",
     [
+        (['#.##..##.',
+          '..#.##.#.',
+          '##......#',
+          '##......#',
+          '..#.##.#.',
+          '..##..##.',
+          '#.#.##.#.'],
+         (2, True)),
+
+        (['#...##..#',
+          '#....#..#',
+          '..##..###',
+          '#####.##.',
+          '#####.##.',
+          '..##..###',
+          '#....#..#'],
+         (0, True)),
+
+                         ]
+)
+def test_find_mirror2(m, expected):
+    assert expected == find_mirror2(m)
+
+
+@pytest.mark.parametrize(
+    "m, expected",
+    [
         ([[1, 2, 3],
           [4, 5, 6]],
          [[1, 4],

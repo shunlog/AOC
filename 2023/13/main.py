@@ -35,9 +35,37 @@ def find_mirror(m):
     return (find_vertical(transpose(m)), True)
 
 
-def value(m):
+def find_mirror2(m):
+    ''' The same as find_mirror,
+    but there has to be exactly one error (smudge).'''
+
+    def test_column_errors(m, i):
+        '''Returns the number of errors if the mirror is after column i'''
+        # TODO
+        s = 0
+        for r in m:
+            left = r[:i+1]
+            right = r[i+1:]
+            s += sum(int(p[0] != p[1]) for p in zip(left[::-1], right))
+            ic(i, r, s)
+        return s
+
+    def find_vertical(m):
+        '''Returns column after which is the mirror, or False'''
+        for i in range(len(m[0])-1):
+            if test_column_errors(m, i) == 1:
+                return i
+        return False
+
+    if type(i := find_vertical(m)) != bool:
+        return (i, False)
+
+    return (find_vertical(transpose(m)), True)
+
+
+def value(m, part2):
     '''Returns value of pattern for part 1'''
-    i, horiz = find_mirror(m)
+    i, horiz = find_mirror2(m) if part2 else find_mirror(m)
     if horiz:
         return 100 * (i + 1)
     return i + 1
@@ -46,7 +74,7 @@ def value(m):
 def solve(inp, part2=False):
     patterns = [p.splitlines() for p in inp.split('\n\n')]
 
-    return sum(value(m) for m in patterns)
+    return sum(value(m, part2) for m in patterns)
 
 
 if __name__ == "__main__":
