@@ -3,13 +3,6 @@ from icecream import ic
 from copy import deepcopy
 
 
-def equal_lists(a, b):
-    return all(x==y for x,y in zip(a, b))
-
-def equal_matrices(a, b):
-    return all(equal_lists(x, y) for x,y in zip(a, b))
-
-
 RIGHT = (1, 0)
 LEFT = (-1, 0)
 UP = (0, -1)
@@ -83,7 +76,7 @@ def solve(inp, part2=False):
     oldm = deepcopy(m)
     for i in range(mincycle+1, cycles):
         roll_cycle(m)
-        if equal_matrices(oldm, m):
+        if oldm == m:
             lencycle = i - mincycle
             break
 
