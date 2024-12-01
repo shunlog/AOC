@@ -2,34 +2,40 @@
 from icecream import ic
 from collections import Counter
 
-with open("my.in") as f:
-    inp = f.read()
 
-l1 = []
-l2 = []
+def solve1(l1, l2):
+    ls1 = sorted(l1)
+    ls2 = sorted(l2)
 
-for l in inp.split('\n'):
-    if not l:
-        break
-    a, b = l.split()
-    l1.append(int(a))
-    l2.append(int(b))
-
-ls1 = sorted(l1)
-ls2 = sorted(l2)
-
-s = 0
-for x, y in zip(ls1, ls2):
-    d = abs(x - y)
-    s += d
-
-print(s)
+    return sum(abs(x - y) for x, y in zip(ls1, ls2))
 
 
-c = Counter(l2)
-ic(c)
+def solve2(l1, l2):
+    c = Counter(l2)
+    return sum(x * c[x] for x in l1)
 
-s = 0
-for x in l1:
-    s += x * c[x]
-print(s)
+
+def solve(inp, part2=False):
+    l1 = []
+    l2 = []
+
+    for l in inp.split('\n'):
+        a, b = [int(i) for i in l.split()]
+        l1.append(a)
+        l2.append(b)
+
+    if part2:
+        return solve2(l1, l2)
+
+    return solve1(l1, l2)
+
+
+if __name__ == "__main__":
+    import sys
+    inp = sys.stdin.read().strip()
+    if not '--debug' in sys.argv:
+        ic.disable()
+    if '2' not in sys.argv:
+        print(solve(inp))
+    if '1' not in sys.argv:
+        print(solve(inp, True))
