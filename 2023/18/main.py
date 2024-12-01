@@ -40,6 +40,7 @@ def inside(d, x, y):
     return d[(x, y)] == '.'
 
 def setf(d, x, y):
+    return
     d[(x, y)] = '#'
 
 
