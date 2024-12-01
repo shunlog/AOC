@@ -16,9 +16,10 @@ def solve2(l1, l2):
 
 
 def solve(inp, part2=False):
+    inp = inp.strip()
+
     l1 = []
     l2 = []
-
     for l in inp.split('\n'):
         a, b = [int(i) for i in l.split()]
         l1.append(a)
@@ -32,7 +33,7 @@ def solve(inp, part2=False):
 
 if __name__ == "__main__":
     import sys
-    inp = sys.stdin.read().strip()
+    inp = sys.stdin.read()
     if not '--debug' in sys.argv:
         ic.disable()
     if '2' not in sys.argv:
