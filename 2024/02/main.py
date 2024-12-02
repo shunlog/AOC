@@ -28,11 +28,7 @@ def safe_dampened(r):
 
     # for each element in the list, create a list without it
     miss = [r[:i] + r[i+1:] for i in range(len(r))]
-    for l in miss:
-        if safe(l):
-            return True
-
-    return False
+    return any(safe(l) for l in miss)
 
 
 def solve2(m):
