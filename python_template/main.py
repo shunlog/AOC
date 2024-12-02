@@ -3,11 +3,11 @@ import sys
 from icecream import ic
 
 
-def solve1(l):
+def solve1(m):
     return
 
 
-def solve2(l):
+def solve2(m):
     return
 
 
@@ -19,9 +19,9 @@ def solve(inp, part2=False, debug=False):
     inp = inp.strip()
 
     if part2:
-        return solve2(l1, l2)
+        return solve2(inp)
 
-    return solve1(l1, l2)
+    return solve1(inp)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from main import solve
 
 
-def file_test(fn: str, expected: int, part2 := False):
+def file_test(fn: str, expected: int, part2: bool = False):
     '''
     Assert that solve() is correct on input from file.
     - fn: filename which contains the test case
@@ -13,17 +13,17 @@ def file_test(fn: str, expected: int, part2 := False):
     assert expected == res
 
 
-def test_test1_part1():
-    file_test("test.txt", 11)
+def test_ex1_p1():
+    file_test("example1.txt", 0)
 
 
-def test_test1_part2():
-    file_test("test.txt", 31, True)
+def test_ex1_p2():
+    file_test("example1.txt", 0, True)
 
 
-def test_input_part1():
-    file_test("input.txt", 2904518)
+def test_input_p1():
+    file_test("input.txt", 0)
 
 
-def test_input_part2():
-    file_test("input.txt", 18650129, True)
+def test_input_p2():
+    file_test("input.txt", 0, True)
