@@ -18,12 +18,12 @@ def test_test1_part1():
 
 
 def test_test1_part2():
-    file_test("test1.txt", 0, True)
+    file_test("test1.txt", 4, True)
 
 
 def test_input_part1():
-    file_test("input.txt", 0)
+    file_test("input.txt", 230)
 
 
 def test_input_part2():
-    file_test("input.txt", 0, True)
+    file_test("input.txt", 301, True)

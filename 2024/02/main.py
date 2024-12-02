@@ -5,7 +5,8 @@ from icecream import ic
 from itertools import pairwise
 
 
-def safe(rep):
+def safe(rep) -> bool:
+    '''Return True if report (line) is safe.'''
     l = list(pairwise(rep))
     diff = [b-a for (a, b) in l]
     if not (all(n < 0 for n in diff)
@@ -21,11 +22,12 @@ def solve1(m):
 
 
 def safe_dampened(r):
+    '''Safe() but for part 2'''
     if safe(r):
         return True
 
+    # for each element in the list, create a list without it
     miss = [r[:i] + r[i+1:] for i in range(len(r))]
-    ic(miss)
     for l in miss:
         if safe(l):
             return True
@@ -44,8 +46,6 @@ def solve(inp, part2=False, debug=False):
     # pre-process for both parts
     inp = inp.strip()
     m = [[int(n) for n in l.split()] for l in inp.splitlines()]
-
-    ic(m)
 
     if part2:
         return solve2(m)
