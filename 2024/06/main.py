@@ -75,7 +75,37 @@ def solve1(s: State):
     return cnt
 
 
-def check_cycle(s: State):
+def simulate_until_rot(s: State):
+    '''Given a state, simulate it until the next rotation and return True,
+    or return None if the edge was reached'''
+    while True:
+        dirn0 = s.dirn
+        if take_turn(s) is None:
+            return None
+        dirn1 = s.dirn
+        if dirn1 != dirn0:  # last turn was a rotation
+            return True
+
+
+def compute_jump_table(s: State):
+    # given a combination (pos, dirn), return the next (pos, dirn) after a wall is hit,
+    # or return None if the map edge is reached
+    t: dict[tuple[tuple[int, int], str], tuple[tuple[int, int], str]]
+    t = {}
+    for ri, row in enumerate(s.m):
+        for ci, ch in enumerate(row):
+            for dirn in '^>v<':
+                s.pos = (ri, ci)
+                s.dirn = dirn
+                if simulate_until_rot(s) is None:
+                    dest = None
+                else:
+                    dest = (s.pos, s.dirn)
+                t[((ri, ci), dirn)] = dest
+    return t
+
+
+def check_cycle(s: State, jump_table, new_wall_pos):
     '''Returns True if there's a cycle,
     otherwise False'''
     # stores the combinations of (position, direction) that the guard had
@@ -83,9 +113,17 @@ def check_cycle(s: State):
     visited: set[tuple[tuple[int, int], str]] = set()
 
     while True:
-        res = take_turn(s)
-        if res == None:
-            return False
+        if (s.pos[0] == new_wall_pos[0]) or (s.pos[1] == new_wall_pos[1]):
+            # simulate normally if there might be the new wall in the path
+            res = take_turn(s)
+            if res is None:
+                return False
+        else:
+            # use the pre-computed location to jump to next wall
+            res = jump_table[(s.pos, s.dirn)]
+            if res is None:
+                return False
+            s.pos, s.dirn = res[0], res[1]
 
         if (s.pos, s.dirn) in visited:
             return True
@@ -94,14 +132,16 @@ def check_cycle(s: State):
 
 
 def solve2(s: State):
-    ans = []
-
     # we only have to try and block the original path of the guard,
     # so the other squares can be ignored
     # for that, we first simulate the grid to get the original visited ceills
     s_fin = copy.deepcopy(s)
     run_until_complete(s_fin)
 
+    s_precomp = copy.deepcopy(s)
+    jump_table = compute_jump_table(s_precomp)
+
+    ans = []
     it = 0  # count the number of obstacles tried
     for r, c in product(range(len(s.m)), range(len(s.m[0]))):
         # skip if this cell won't be visited
@@ -111,12 +151,14 @@ def solve2(s: State):
         s_copy = copy.deepcopy(s)
         s_copy.m[r] = s.m[r][:c] + '#' + s.m[r][c+1:]
 
-        res = check_cycle(s_copy)
+        res = check_cycle(s_copy, jump_table, (r, c))
         it += 1
-        if res == True:
+        if res is True:
             ans.append((r, c))
 
+    ic(ans[:20])
     ic(it)
+
     return len(ans)
 
 
