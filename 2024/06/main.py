@@ -94,6 +94,9 @@ def compute_jump_table(s: State):
     t = {}
     for ri, row in enumerate(s.m):
         for ci, ch in enumerate(row):
+            # no need to pre-compute for walls
+            if ch not in '.X':
+                continue
             for dirn in '^>v<':
                 s.pos = (ri, ci)
                 s.dirn = dirn
