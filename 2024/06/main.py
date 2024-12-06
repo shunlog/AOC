@@ -2,6 +2,9 @@
 import sys
 from icecream import ic
 
+import copy
+from itertools import product
+from collections import defaultdict
 from dataclasses import dataclass
 
 
@@ -10,21 +13,24 @@ class State:
     m: list[str]  # list of rows
     pos: tuple[int, int]  # guard position (row, column)
     dirn: str  # direction, one of [^>v<]
-    # list of directions the guard had in each cell
-    # e.g. visited = {(5, 5): ['^', 'v']}
-    visited: dict[tuple[int, int], list[str]]
+    # stores the combinations of (position, direction) that the guard had
+    # e.g. visited = {((1, 1), '^'), ...}
+    visited: set[tuple[tuple[int, int], str]]
 
 
 def mark(s):
-    '''Mark the guard's position on the map as visited with X.'''
+    '''Mark the guard's position on the map as visited with X,
+    and mark the position+direction combination as visited'''
     r, c = s.pos
     s.m[r] = s.m[r][:c] + 'X' + s.m[r][c+1:]
+    s.visited.add((s.pos, s.dirn))
 
 
 def take_turn(s: State):
     '''The guard takes a turn:
     either a step forward, or a rotation.
-    If the guard winds up outside the map, raise exception. '''
+    Return None if the guard winds up outside the map.
+    Return True if a cycle is detected.'''
     rows, cols = len(s.m), len(s.m[0])
     posdiff = {'^': (-1, 0),
                '>': (0, 1),
@@ -37,25 +43,28 @@ def take_turn(s: State):
     npos = tuple(a+b for a, b in zip(s.pos, posdiff[s.dirn]))
 
     if npos[0] < 0 or npos[1] < 0 or npos[0] >= rows or npos[1] >= cols:
-        raise ValueError("Guard has walked outside the map.")
+        return None
 
     if s.m[npos[0]][npos[1]] == '#':
         # rotate
         s.dirn = rot_dirn[s.dirn]
-        return
+        if (s.pos, s.dirn) in s.visited:
+            return True
+        mark(s)
+        return False
 
     # step forward
     s.pos = npos
+    if (s.pos, s.dirn) in s.visited:
+        return True
     mark(s)
-    return
+    return False
 
 
 def solve1(s: State):
-
     while True:
-        try:
-            take_turn(s)
-        except:
+        res = take_turn(s)
+        if res == None:
             break
 
     ic(s)
@@ -68,8 +77,36 @@ def solve1(s: State):
     return cnt
 
 
-def solve2(m):
-    return
+def check_cycle(s: State):
+    '''Returns True if there's a cycle,
+    otherwise False'''
+    while True:
+        res = take_turn(s)
+        # stop when either cycle is detected,
+        # or guard exits the map
+        if res == True:
+            return True
+        if res == None:
+            return False
+
+
+def solve2(s: State):
+    ans = []
+
+    for r, c in product(range(len(s.m)), range(len(s.m[0]))):
+        ic(r, c)
+        s_copy = copy.deepcopy(s)
+        # try put the obstacle here
+        if s.m[r][c] != '.':
+            continue
+        s_copy.m[r] = s.m[r][:c] + '#' + s.m[r][c+1:]
+
+        res = check_cycle(s_copy)
+        if res == True:
+            ans.append((r, c))
+
+    ic(ans)
+    return len(ans)
 
 
 def solve(inp, part2=False, debug=False):
@@ -85,7 +122,7 @@ def solve(inp, part2=False, debug=False):
                 dirn = ch
                 break
     # initial state
-    s = State(m, pos, dirn, {pos: [dirn]})
+    s = State(m, pos, dirn, set())
     # remove guard symbol from map, mark it as visited
     mark(s)
     ic(s)
