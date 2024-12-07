@@ -34,11 +34,11 @@ class State:
         return tuple(self._m)
 
     @property
-    def pos(self):
+    def pos(self) -> tuple[int, int]:
         return self._pos
 
     @property
-    def dirn(self):
+    def dirn(self) -> str:
         return self._dirn
 
     @property
@@ -142,22 +142,23 @@ def simulate_until_rot(s: State):
 
 
 def compute_jump_table(s: State):
-    # given a combination (pos, dirn), return the next (pos, dirn) after a wall is hit,
-    # or return False if the map edge is reached
-    t: dict[tuple[tuple[int, int], str], tuple[tuple[int, int], str]]
-    t = {}
+    # Jump table dict:
+    # given a combination (pos, dirn), gives the next (pos, dirn) after a wall is hit,
+    # or False if the map edge is reached
+    t: dict[tuple[tuple[int, int], str],
+            [tuple[tuple[int, int], str] | False]] = {}
+
     for ri, row in enumerate(s.m):
         for ci, ch in enumerate(row):
-            # don't pre-compute for walls or for the original position
+            # don't pre-compute for walls
             if ch != '.':
                 continue
             for dirn in '^>v<':
                 s.place_guard((ri, ci), dirn)
                 if simulate_until_rot(s) is False:
-                    dest = False
+                    t[((ri, ci), dirn)] = False
                 else:
-                    dest = (s.pos, s.dirn)
-                t[((ri, ci), dirn)] = dest
+                    t[((ri, ci), dirn)] = (s.pos, s.dirn)
     return t
 
 
@@ -172,11 +173,13 @@ def check_cycle(s: State, jump_table, new_wall_pos):
         if (s.pos[0] == new_wall_pos[0]) or (s.pos[1] == new_wall_pos[1]):
             # simulate normally if there might be the new wall in the path
             res = s.take_turn()
+            # finish if the guard walks outside the bounds
             if res is False:
                 return False
         else:
             # use the pre-computed location to jump to next wall
             res = jump_table[(s.pos, s.dirn)]
+            # finish if the jump goes outside the bounds
             if res is False:
                 return False
             pos, dirn = res
