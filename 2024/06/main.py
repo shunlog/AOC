@@ -6,6 +6,7 @@ import copy
 from itertools import product
 from collections import defaultdict
 from dataclasses import dataclass
+from types import MappingProxyType
 
 
 @dataclass
@@ -13,6 +14,9 @@ class State:
     _m: list[str]  # list of rows
     _pos: tuple[int, int]  # guard position (row, column)
     _dirn: str  # direction, one of [^>v<]
+    # map the visited position to the direction the guard had
+    # when she first visited it
+    _visited: dict[tuple[int, int], str]
 
     # 1. to disalolw the user to set the fields directly,
     # make them "private" with the _x notation
@@ -37,6 +41,10 @@ class State:
     def dirn(self):
         return self._dirn
 
+    @property
+    def visited(self) -> MappingProxyType[tuple[int, int], str]:
+        return MappingProxyType(self._visited)
+
     posdiff = {'^': (-1, 0),
                '>': (0, 1),
                'v': (1, 0),
@@ -56,12 +64,11 @@ class State:
         self._mark()
 
     def _mark(self):
-        '''Mark the guard's position on the map as visited with X'''
-        r, c = self._pos
+        '''Mark the guard's position on the map as visited.'''
         # skip if the position is already marked
-        if self._m[r][c] == 'X':
+        if self._visited.get(self._pos):
             return
-        self._m[r] = self._m[r][:c] + 'X' + self._m[r][c+1:]
+        self._visited[self._pos] = self._dirn
 
     def place_guard(self, npos, dirn=None):
         r, c = npos
@@ -119,12 +126,7 @@ def run_until_complete(s: State):
 
 def solve1(s: State):
     run_until_complete(s)
-    cnt = 0
-    for row, rs in enumerate(s.m):
-        for col, ch in enumerate(rs):
-            if ch == 'X':
-                cnt += 1
-    return cnt
+    return len(s.visited)
 
 
 def simulate_until_rot(s: State):
@@ -147,7 +149,7 @@ def compute_jump_table(s: State):
     for ri, row in enumerate(s.m):
         for ci, ch in enumerate(row):
             # don't pre-compute for walls or for the original position
-            if ch not in '.X':
+            if ch != '.':
                 continue
             for dirn in '^>v<':
                 s.place_guard((ri, ci), dirn)
@@ -163,8 +165,8 @@ def check_cycle(s: State, jump_table, new_wall_pos):
     '''Returns True if there's a cycle,
     otherwise False'''
     # stores the combinations of (position, direction) that the guard had
-    # e.g. visited = {((1, 1), '^'), ...}
-    visited: set[tuple[tuple[int, int], str]] = set()
+    # e.g. posdirs_had = {((1, 1), '^'), ...}
+    posdirs_had: set[tuple[tuple[int, int], str]] = set()
 
     while True:
         if (s.pos[0] == new_wall_pos[0]) or (s.pos[1] == new_wall_pos[1]):
@@ -180,10 +182,10 @@ def check_cycle(s: State, jump_table, new_wall_pos):
             pos, dirn = res
             s.place_guard(pos, dirn)
 
-        if (s.pos, s.dirn) in visited:
+        if (s.pos, s.dirn) in posdirs_had:
             return True
 
-        visited.add((s.pos, s.dirn))
+        posdirs_had.add((s.pos, s.dirn))
 
 
 def solve2(s: State):
@@ -202,7 +204,7 @@ def solve2(s: State):
     # try putting a wall in every free spot
     for r, c in product(range(len(s.m)), range(len(s.m[0]))):
         # skip if this cell won't be visited
-        if s_fin.m[r][c] != 'X':
+        if s_fin._visited.get((r, c)) is None:
             continue
         # skip the starting position of the guard
         if r == s.pos[0] and c == s.pos[1]:
@@ -215,7 +217,6 @@ def solve2(s: State):
         it += 1
         if res is True:
             ans.append((r, c))
-    ic(it)
 
     return len(ans)
 
@@ -232,8 +233,11 @@ def solve(inp, part2=False, debug=False):
                 pos = (row, col)
                 dirn = ch
                 break
+    # remove the guard mark from the matrix
+    r, c = pos
+    m[r] = m[r][:c] + '.' + m[r][c+1:]
     # initial state
-    s = State(m, pos, dirn)
+    s = State(m, pos, dirn, {})
 
     if part2:
         return solve2(s)
