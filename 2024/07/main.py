@@ -9,18 +9,25 @@ def solvable(expected: str, nums: str, part2=False):
     '''Given the list of nums and the expected result,
     return True if it can be solved with any combination of operators.'''
 
-    operations = '+*' if not part2 else '+*|'
-    ops_ls = list(product(*[operations] * (len(nums)-1)))
-
-    for ops in ops_ls:
+    def try_ops(ops):
         res = nums[0]
         for num, op in zip(nums[1:], ops):
             if op == '*':
                 res = str(int(res) * int(num))
+            elif op == '|':
+                res += num
             else:
                 res = str(int(res) + int(num))
+            if int(res) > int(expected):
+                return False
 
         if res == expected:
+            return True
+
+    operations = '+*' if not part2 else '+*|'
+    ops_ls = list(product(*[operations] * (len(nums)-1)))
+    for ops in ops_ls:
+        if try_ops(ops):
             return True
 
     return False
@@ -31,7 +38,7 @@ def solve1(ls):
 
 
 def solve2(ls):
-    return
+    return sum(int(ic(l[0])) for l in ls if solvable(l[0], l[1:], True))
 
 
 def solve(inp, part2=False, debug=False):
