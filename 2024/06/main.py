@@ -10,66 +10,109 @@ from dataclasses import dataclass
 
 @dataclass
 class State:
-    m: list[str]  # list of rows
-    pos: tuple[int, int]  # guard position (row, column)
-    dirn: str  # direction, one of [^>v<]
+    _m: list[str]  # list of rows
+    _pos: tuple[int, int]  # guard position (row, column)
+    _dirn: str  # direction, one of [^>v<]
 
+    # 1. to disalolw the user to set the fields directly,
+    # make them "private" with the _x notation
+    # 2. to still allow the user to read the data,
+    # give him immutable counterparts for each private method
+    # e.g. list -> tuple, dict -> MappingProxyType, set -> frozenset
+    # list[list] -> deep copy
 
-def mark(s):
-    '''Mark the guard's position on the map as visited with X'''
-    r, c = s.pos
-    # check that the guard isn't on a wall
-    assert s.m[r][c] != '#'
-    # skip if the position is already marked
-    if s.m[r][c] == 'X':
-        return
-    s.m[r] = s.m[r][:c] + 'X' + s.m[r][c+1:]
+    # This still doesn't protect from mutating elements of containers
+    # e.g. mutating the list of the returned tuple,
+    # so as a rule of thumb, there should be no mutations outside the class methods.
 
+    @property
+    def m(self):
+        return tuple(self._m)
 
-posdiff = {'^': (-1, 0),
-           '>': (0, 1),
-           'v': (1, 0),
-           '<': (0, -1)}
-rot_dirn = {'^': '>',
-            '>': 'v',
-            'v': '<',
-            '<': '^'}
+    @property
+    def pos(self):
+        return self._pos
 
+    @property
+    def dirn(self):
+        return self._dirn
 
-def take_turn(s: State):
-    '''The guard takes a turn:
-    either a step forward, or a rotation.
-    Return None if the guard winds up outside the map.
-    Return True if a cycle is detected.'''
-    r, c = s.pos
+    posdiff = {'^': (-1, 0),
+               '>': (0, 1),
+               'v': (1, 0),
+               '<': (0, -1)}
 
-    # check that the guard isn't on a wall
-    assert s.m[r][c] != '#'
+    rot_dirn = {'^': '>',
+                '>': 'v',
+                'v': '<',
+                '<': '^'}
 
-    # the position in front of the guard
-    npos = tuple(a+b for a, b in zip(s.pos, posdiff[s.dirn]))
+    def __post_init__(self):
+        # make sure the guard is not placed on a wall
+        r, c = self._pos
+        assert self._m[r][c] != '#'
 
-    rows, cols = len(s.m), len(s.m[0])
-    if npos[0] < 0 or npos[1] < 0 or npos[0] >= rows or npos[1] >= cols:
-        return None
+        # make sure the position is marked as visited
+        self._mark()
 
-    # rotate if wall in front
-    if s.m[npos[0]][npos[1]] == '#':
-        s.dirn = rot_dirn[s.dirn]
-        return False
+    def _mark(self):
+        '''Mark the guard's position on the map as visited with X'''
+        r, c = self._pos
+        # skip if the position is already marked
+        if self._m[r][c] == 'X':
+            return
+        self._m[r] = self._m[r][:c] + 'X' + self._m[r][c+1:]
 
-    # otherwise step forward
-    s.pos = npos
-    mark(s)
-    return False
+    def place_guard(self, npos, dirn=None):
+        r, c = npos
+        # check that the guard isn't placed on a wall
+        assert self._m[r][c] != '#'
+
+        self._pos = npos
+        if dirn:
+            self._dirn = dirn
+        self._mark()
+
+    def put_wall(self, pos):
+        # make sure the wall is not placed on the guard
+        assert self._pos != pos
+        r, c = pos
+        self._m[r] = self._m[r][:c] + '#' + self._m[r][c+1:]
+
+    def rotate_guard(self):
+        '''Rotate guard clockwise'''
+        self._dirn = self.rot_dirn[self._dirn]
+
+    def take_turn(self):
+        '''The guard takes a turn:
+        either a step forward, or a rotation.
+        Return False if the guard winds up outside the map.'''
+
+        # the position in front of the guard
+        p = self._pos
+        d = self.posdiff[self._dirn]  # delta
+        npos = (p[0] + d[0], p[1] + d[1])
+
+        rows, cols = len(self._m), len(self._m[0])
+        if npos[0] < 0 or npos[1] < 0 or npos[0] >= rows or npos[1] >= cols:
+            return False
+
+        # rotate if wall in front
+        if self._m[npos[0]][npos[1]] == '#':
+            self.rotate_guard()
+            return True
+
+        # otherwise just step forward
+        self.place_guard(npos)
+        return True
 
 
 def run_until_complete(s: State):
     '''Run the simulation until the guard exits the map,
     assuming she will eventually.'''
     while True:
-        res = take_turn(s)
-        if res == None:
+        res = s.take_turn()
+        if res is False:
             break
     return s
 
@@ -79,18 +122,18 @@ def solve1(s: State):
     cnt = 0
     for row, rs in enumerate(s.m):
         for col, ch in enumerate(rs):
-            if ch in 'X':
+            if ch == 'X':
                 cnt += 1
     return cnt
 
 
 def simulate_until_rot(s: State):
     '''Given a state, simulate it until the next rotation and return True,
-    or return None if the edge was reached'''
+    or return False if the edge was reached'''
     while True:
         dirn0 = s.dirn
-        if take_turn(s) is None:
-            return None
+        if s.take_turn() is False:
+            return False
         dirn1 = s.dirn
         if dirn1 != dirn0:  # last turn was a rotation
             return True
@@ -98,7 +141,7 @@ def simulate_until_rot(s: State):
 
 def compute_jump_table(s: State):
     # given a combination (pos, dirn), return the next (pos, dirn) after a wall is hit,
-    # or return None if the map edge is reached
+    # or return False if the map edge is reached
     t: dict[tuple[tuple[int, int], str], tuple[tuple[int, int], str]]
     t = {}
     for ri, row in enumerate(s.m):
@@ -107,10 +150,9 @@ def compute_jump_table(s: State):
             if ch not in '.X':
                 continue
             for dirn in '^>v<':
-                s.pos = (ri, ci)
-                s.dirn = dirn
-                if simulate_until_rot(s) is None:
-                    dest = None
+                s.place_guard((ri, ci), dirn)
+                if simulate_until_rot(s) is False:
+                    dest = False
                 else:
                     dest = (s.pos, s.dirn)
                 t[((ri, ci), dirn)] = dest
@@ -127,15 +169,16 @@ def check_cycle(s: State, jump_table, new_wall_pos):
     while True:
         if (s.pos[0] == new_wall_pos[0]) or (s.pos[1] == new_wall_pos[1]):
             # simulate normally if there might be the new wall in the path
-            res = take_turn(s)
-            if res is None:
+            res = s.take_turn()
+            if res is False:
                 return False
         else:
             # use the pre-computed location to jump to next wall
             res = jump_table[(s.pos, s.dirn)]
-            if res is None:
+            if res is False:
                 return False
-            s.pos, s.dirn = res[0], res[1]
+            pos, dirn = res
+            s.place_guard(pos, dirn)
 
         if (s.pos, s.dirn) in visited:
             return True
@@ -166,7 +209,7 @@ def solve2(s: State):
             continue
 
         s_copy = copy.deepcopy(s)
-        s_copy.m[r] = s.m[r][:c] + '#' + s.m[r][c+1:]
+        s_copy.put_wall((r, c))
 
         res = check_cycle(s_copy, jump_table, (r, c))
         it += 1
@@ -191,8 +234,6 @@ def solve(inp, part2=False, debug=False):
                 break
     # initial state
     s = State(m, pos, dirn)
-    # remove guard symbol from map, mark it as visited
-    mark(s)
 
     if part2:
         return solve2(s)
