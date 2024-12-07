@@ -18,6 +18,11 @@ class State:
 def mark(s):
     '''Mark the guard's position on the map as visited with X'''
     r, c = s.pos
+    # check that the guard isn't on a wall
+    assert s.m[r][c] != '#'
+    # skip if the position is already marked
+    if s.m[r][c] == 'X':
+        return
     s.m[r] = s.m[r][:c] + 'X' + s.m[r][c+1:]
 
 
@@ -36,20 +41,24 @@ def take_turn(s: State):
     either a step forward, or a rotation.
     Return None if the guard winds up outside the map.
     Return True if a cycle is detected.'''
-    rows, cols = len(s.m), len(s.m[0])
+    r, c = s.pos
 
+    # check that the guard isn't on a wall
+    assert s.m[r][c] != '#'
+
+    # the position in front of the guard
     npos = tuple(a+b for a, b in zip(s.pos, posdiff[s.dirn]))
 
+    rows, cols = len(s.m), len(s.m[0])
     if npos[0] < 0 or npos[1] < 0 or npos[0] >= rows or npos[1] >= cols:
         return None
 
+    # rotate if wall in front
     if s.m[npos[0]][npos[1]] == '#':
-        # rotate
         s.dirn = rot_dirn[s.dirn]
-        mark(s)
         return False
 
-    # step forward
+    # otherwise step forward
     s.pos = npos
     mark(s)
     return False
@@ -94,7 +103,7 @@ def compute_jump_table(s: State):
     t = {}
     for ri, row in enumerate(s.m):
         for ci, ch in enumerate(row):
-            # no need to pre-compute for walls
+            # don't pre-compute for walls or for the original position
             if ch not in '.X':
                 continue
             for dirn in '^>v<':
@@ -145,10 +154,15 @@ def solve2(s: State):
     jump_table = compute_jump_table(s_precomp)
 
     ans = []
-    it = 0  # count the number of obstacles tried
+    it = 0  # count the number of walls placed and  simulated
+
+    # try putting a wall in every free spot
     for r, c in product(range(len(s.m)), range(len(s.m[0]))):
         # skip if this cell won't be visited
         if s_fin.m[r][c] != 'X':
+            continue
+        # skip the starting position of the guard
+        if r == s.pos[0] and c == s.pos[1]:
             continue
 
         s_copy = copy.deepcopy(s)
@@ -158,8 +172,6 @@ def solve2(s: State):
         it += 1
         if res is True:
             ans.append((r, c))
-
-    ic(ans[:20])
     ic(it)
 
     return len(ans)
@@ -181,7 +193,6 @@ def solve(inp, part2=False, debug=False):
     s = State(m, pos, dirn)
     # remove guard symbol from map, mark it as visited
     mark(s)
-    ic(s)
 
     if part2:
         return solve2(s)
