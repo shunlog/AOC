@@ -5,24 +5,29 @@ from icecream import ic
 from itertools import product
 
 
-def solvable(result, nums):
-    '''Given the list of nums, return True if it can be solved.'''
-    ops_ls = list(product(*['+*'] * (len(nums)-1)))
+def solvable(expected: str, nums: str, part2=False):
+    '''Given the list of nums and the expected result,
+    return True if it can be solved with any combination of operators.'''
+
+    operations = '+*' if not part2 else '+*|'
+    ops_ls = list(product(*[operations] * (len(nums)-1)))
 
     for ops in ops_ls:
-        expr = []
+        res = nums[0]
         for num, op in zip(nums[1:], ops):
-            expr.extend([op, num, ')'])
-        s = '(' * (len(nums)-1) + nums[0] + ' '.join(expr)
-        r = eval(s)
-        if r == result:
+            if op == '*':
+                res = str(int(res) * int(num))
+            else:
+                res = str(int(res) + int(num))
+
+        if res == expected:
             return True
 
     return False
 
 
 def solve1(ls):
-    return sum(l[0] for l in ls if solvable(l[0], l[1:]))
+    return sum(int(l[0]) for l in ls if solvable(l[0], l[1:]))
 
 
 def solve2(ls):

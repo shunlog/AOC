@@ -18,7 +18,7 @@ def test_ex1_p1():
 
 
 def test_ex1_p2():
-    file_test("example1.txt", 0, True)
+    file_test("example1.txt", 2941973819040, True)
 
 
 def test_input_p1():
