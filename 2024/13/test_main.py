@@ -14,16 +14,16 @@ def file_test(fn: str, expected: int, part2: bool = False):
 
 
 def test_ex1_p1():
-    file_test("example1.txt", 0)
+    file_test("example1.txt", 480)
 
 
 def test_ex1_p2():
-    file_test("example1.txt", 0, True)
+    file_test("example1.txt", 875318608908, True)
 
 
 def test_input_p1():
-    file_test("input.txt", 0)
+    file_test("input.txt", 26599)
 
 
 def test_input_p2():
-    file_test("input.txt", 0, True)
+    file_test("input.txt", 106228669504887, True)

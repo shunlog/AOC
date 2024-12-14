@@ -19,8 +19,7 @@ def solve_system(a, b, c, d, e, f) -> tuple[int, int]:
     return x, y
 
 
-def solve1(ls):
-
+def solve1(ls, part2):
     # ax+by=c
     # dx+ey=f
     # x, y - number of presses on A and B respectively
@@ -32,6 +31,11 @@ def solve1(ls):
 
     for l in ls:
         a, d, b, e, c, f = l
+
+        if part2:
+            c += 10000000000000
+            f += 10000000000000
+
         s = solve_system(a, b, c, d, e, f)
         ic(s)
         if not s:
@@ -39,15 +43,11 @@ def solve1(ls):
 
         x, y = s
         assert x > 0 and y > 0
-        if x > 100 or y > 100:
+        if not part2 and (x > 100 or y > 100):
             continue
         tok += 3 * x + y
 
     return tok
-
-
-def solve2(ls):
-    return
 
 
 def solve(inp, part2=False, debug=False):
@@ -64,10 +64,7 @@ def solve(inp, part2=False, debug=False):
         nums_int = [int(n) for n in nums]
         ls.append(nums_int)
 
-    if part2:
-        return solve2(ls)
-
-    return solve1(ls)
+    return solve1(ls, part2)
 
 
 if __name__ == "__main__":
