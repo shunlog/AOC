@@ -18,12 +18,12 @@ def test_ex1_p1():
 
 
 def test_ex1_p2():
-    file_test("example1.txt", 2941973819040, True)
+    file_test("example1.txt", 11387, True)
 
 
 def test_input_p1():
-    file_test("input.txt", 0)
+    file_test("input.txt", 2941973819040)
 
 
 def test_input_p2():
-    file_test("input.txt", 0, True)
+    file_test("input.txt", 2941973819040, True)

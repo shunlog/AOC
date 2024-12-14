@@ -13,16 +13,16 @@ def solvable(expected: str, nums: str, part2=False):
         res = nums[0]
         for num, op in zip(nums[1:], ops):
             if op == '*':
-                res = str(int(res) * int(num))
-            elif op == '|':
-                res += num
+                res = res * num
+            elif op == '+':
+                res = res + num
             else:
-                res = str(int(res) + int(num))
-            if int(res) > int(expected):
+                res = int(str(res) + str(num))
+
+            if res > expected:
                 return False
 
-        if res == expected:
-            return True
+        return res == expected
 
     operations = '+*' if not part2 else '+*|'
     ops_ls = list(product(*[operations] * (len(nums)-1)))
@@ -34,11 +34,11 @@ def solvable(expected: str, nums: str, part2=False):
 
 
 def solve1(ls):
-    return sum(int(l[0]) for l in ls if solvable(l[0], l[1:]))
+    return sum(l[0] for l in ls if solvable(l[0], l[1:]))
 
 
 def solve2(ls):
-    return sum(int(ic(l[0])) for l in ls if solvable(l[0], l[1:], True))
+    return sum(ic(l[0]) for l in ls if solvable(l[0], l[1:], True))
 
 
 def solve(inp, part2=False, debug=False):
@@ -49,7 +49,7 @@ def solve(inp, part2=False, debug=False):
     inp = inp.strip()
     ls = []
     for l in inp.splitlines():
-        nums = [n for n in l.replace(':', '').split()]
+        nums = [int(n) for n in l.replace(':', '').split()]
         ls.append(nums)
 
     if part2:
