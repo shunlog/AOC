@@ -2,18 +2,21 @@
 import sys
 from icecream import ic
 
+import os
 import re
 from math import prod
+import sys
+
+# For examples:
+w = 11
+h = 7
+
+# w = 101
+# h = 103
 
 
 def solve1(ls):
     t = 100
-
-    # For examples:
-    # w = 11
-    # h = 7
-    w = 101
-    h = 103
 
     halfw = w // 2
     halfh = h // 2
@@ -39,8 +42,8 @@ def solve1(ls):
     return prod(quadr_cnt.values())
 
 
-def solve2(m):
-    return
+def solve2(ls):
+    return 'Part 2 is in a separate file.'
 
 
 def solve(inp, part2=False, debug=False):
