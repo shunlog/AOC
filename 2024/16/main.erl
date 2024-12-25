@@ -68,4 +68,8 @@ solve(Filename) ->
     {StartX, StartY} = StartPos,
     Solve = fun(Dir) -> search:search({StartX, StartY, e}, {EndX, EndY, Dir}, G, Heuristic) end,
     Sol = lists:min(lists:map(Solve, [e, w, n, s])),
-    io:format("~p~n", [Sol]).
+    Sol.
+
+
+part1_test() ->
+    85432 = solve("input.txt").
