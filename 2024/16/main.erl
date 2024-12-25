@@ -17,7 +17,7 @@ read_lines(IoDevice, Acc) ->
 
 
 
-solve(Filename) ->
+solve(Filename, Part2) ->
     Lines = read_file_as_list(Filename),
     %% Extract list of tuples {X, Y, Character}
     Coords = lists:flatmap(fun({Y, Str}) -> 
@@ -64,21 +64,31 @@ solve(Filename) ->
 
     {EndX, EndY} = EndPos,
     Heuristic = fun({X, Y, _}) -> abs(X - EndX) + abs(Y - EndY) end,
-
     {StartX, StartY} = StartPos,
-    SolveDirDist = fun(Dir) ->  
-                           {Dist, _} = search:search({StartX, StartY, e}, 
-                                                        {EndX, EndY, Dir}, G, Heuristic),
-                           Dist end,
-    Sol = lists:min(lists:map(SolveDirDist, [e, w, n, s])),
-    Sol.
+    StartNode = {StartX, StartY, e},
+
+    case Part2 of
+        false -> 
+            SolveDirDist = fun(Dir) ->  
+                                   {Dist, _} = search:search(StartNode, 
+                                                             {EndX, EndY, Dir}, G, Heuristic),
+                                   Dist end,
+            lists:min(lists:map(SolveDirDist, [e, w, n, s]));
+        true ->
+            {MinDist, Paths} = search:search_all(StartNode, {EndX, EndY, e}, G, Heuristic),
+            Visited = sets:from_list(lists:map(fun({X, Y, _}) -> {X, Y} end, lists:flatten(Paths))),
+            Unvisited = maps:filter(fun({X, Y}, Ch) -> Ch =/= $# andalso sets:is_element({X, Y}, Visited) end, Dict),
+            maps:size(Unvisited)
+            
+    end. 
+           
 
 
 part1_ex1_test() ->
-    ?assertEqual(7036, solve("example1.txt")).
+    ?assertEqual(7036, solve("example1.txt", false)).
 
 part1_ex2_test() ->
-    ?assertEqual(11048, solve("example2.txt")).
+    ?assertEqual(11048, solve("example2.txt", false)).
 
 part1_test() ->
-    ?assertEqual(85432, solve("input.txt")).
+    ?assertEqual(85432, solve("input.txt", false)).

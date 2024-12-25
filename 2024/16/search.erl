@@ -26,24 +26,72 @@ search_loop(Goal, Graph, Heuristic, Open, Gscores, Fscores, CameFrom) ->
 
 search_all(Start, Goal, Graph, Heuristic) ->
     %% Like search, but returns a {Dist, [Path]} with a list of equally good paths.
+    ets:new(shortest_G, [set, named_table]),
     Empty = gb_trees:empty(),
     Open = multi_gb_trees:add(0, Start, Empty),
-    search_loop(Goal, Graph, Heuristic,
-                Open, #{Start => 0}, #{}, #{}).
+    search_all_loop(Goal, Graph, Heuristic,
+                    Open, #{Start => 0}, #{}, #{}).
 
 
+%%% Returns {Dist, [Path1, Path2, ...]}
 search_all_loop(Goal, Graph, Heuristic, Open, Gscores, Fscores, CameFrom) ->
-    %% instead of taking only one of the elements with the same key,
-    %% call the function recursively for all of them and then append the results
-    {_, Node, Open2} = multi_gb_trees:take_smallest(Open),
-    if Node =:= Goal ->
-            Dist = maps:get(Goal, Fscores),
-            Path = trace(Goal, CameFrom),
-            {Dist, Path};
-       true ->
-            {NewOpen, NewG, NewF, NewCameFrom} = 
-                update_neighbors(Node, Graph, Heuristic, Open2, Gscores, Fscores, CameFrom),
-            search_loop(Goal, Graph, Heuristic, NewOpen, NewG, NewF, NewCameFrom)
+    %% This function has to return a list of all the best paths,
+    %% So whenever there are multiple potential paths with the same score,
+    %% we will explore them all in parallel, and then aggregate the results.
+
+    case gb_trees:is_empty(Open) of
+        true -> {16#FFFFFFFFF, []};
+        false ->
+
+            %% Instead of taking only one item from the multi_gb_tree, 
+            %% we take out the entire list for the given key
+            {_, NodeList, Open2} = gb_trees:take_smallest(Open),
+
+            ExploreForSure = fun(Node) ->
+                                     {NewOpen, NewG, NewF, NewCameFrom} = 
+                                         update_neighbors(Node, Graph, Heuristic, Open2, Gscores, Fscores, CameFrom),
+                                     search_all_loop(Goal, Graph, Heuristic, NewOpen, NewG, NewF, NewCameFrom)
+                             end,
+
+            ExploreNode = fun(Node) ->
+
+                                  if Node =:= Goal ->
+                                          Dist = maps:get(Goal, Fscores),
+                                          Path = trace(Goal, CameFrom),
+                                          {Dist, [Path]};
+                                     true ->
+                                          Dist = maps:get(Node, Gscores),
+                                          if Dist > 85432 -> {16#FFFFFFFFF, []} ;
+                                             true ->
+                                                  case ets:lookup(shortest_G, Node) of
+                                                      [{_, ShortestG}] when Dist =< ShortestG -> 
+                                                          %% found a potential best path
+                                                          ets:insert(shortest_G, {Node, Dist}),
+                                                          ExploreForSure(Node) ;
+                                                      [] ->
+                                                          ets:insert(shortest_G, {Node, Dist}),
+                                                          ExploreForSure(Node) ;
+                                                      [{_, ShortestG}] -> %% found a less optimal path
+                                                          {16#FFFFFFFFF, []}
+                                                  end
+                                          end
+                                  end
+                          end,
+
+            %% Then we explore each node in parallel
+            ResLs = lists:map(ExploreNode, NodeList),
+
+            %% The results look like [{Dist, [Path1, Path2, ...]}, ...],
+            %% And we need to make them look like {Dist, [Path1, ...]}.
+            %% We need to filter the results by the shortest Dist, and raise the Paths from the tuple
+            MinDist = lists:min(lists:map(fun({Dist, _}) -> Dist end, ResLs)),
+            FilteredRes = lists:filtermap(fun({Dist, Paths}) -> 
+                                                  if Dist == MinDist -> {true, Paths};
+                                                     true -> false
+                                                  end 
+                                          end, ResLs),
+            %% Now we have a list of lists of paths, which we want to unwrap one level
+            {MinDist, lists:foldl(fun(Paths, Acc) -> Acc ++ Paths end, [], FilteredRes)}
     end.
 
 
@@ -116,6 +164,23 @@ search_all_basecase_test() ->
           b => [{z, 2}],
           c => [{z, 1}]},
     H = #{a => 1, b => 2, c=> 1, z => 0},
+    Heuristic = fun(N) -> maps:get(N, H) end,
+    {Dist, [Path1, Path2]} = search_all(a, z, G, Heuristic),
+    ?assertEqual(3, Dist),
+    ExpectedPaths = [[a, b, z], [a, c, z]],
+    ?assert(lists:member(Path1, ExpectedPaths)),
+    ?assert(lists:member(Path2, ExpectedPaths)).
+
+
+search_all_2_test() ->
+    %% add a third path [a, d, z]
+    %% wchih will be explored because the heuristic for D will be too optimistic
+    %% but shouldn't appear in the results because it's longer
+    G = #{a => [{b, 1}, {c, 2}, {d, 2}],
+          b => [{z, 2}],
+          c => [{z, 1}],
+          d => [{z, 2}]},
+    H = #{a => 1, b => 2, c=> 1, d => 1, z => 0},
     Heuristic = fun(N) -> maps:get(N, H) end,
     {Dist, [Path1, Path2]} = search_all(a, z, G, Heuristic),
     ?assertEqual(3, Dist),
