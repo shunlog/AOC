@@ -1,6 +1,6 @@
 -module(main).
 -compile(export_all).
-
+-include_lib("eunit/include/eunit.hrl").
 
 
 read_file_as_list(Filename) ->
@@ -66,10 +66,19 @@ solve(Filename) ->
     Heuristic = fun({X, Y, _}) -> abs(X - EndX) + abs(Y - EndY) end,
 
     {StartX, StartY} = StartPos,
-    Solve = fun(Dir) -> search:search({StartX, StartY, e}, {EndX, EndY, Dir}, G, Heuristic) end,
-    Sol = lists:min(lists:map(Solve, [e, w, n, s])),
+    SolveDirDist = fun(Dir) ->  
+                           {Dist, _} = search:search({StartX, StartY, e}, 
+                                                        {EndX, EndY, Dir}, G, Heuristic),
+                           Dist end,
+    Sol = lists:min(lists:map(SolveDirDist, [e, w, n, s])),
     Sol.
 
 
+part1_ex1_test() ->
+    ?assertEqual(7036, solve("example1.txt")).
+
+part1_ex2_test() ->
+    ?assertEqual(11048, solve("example2.txt")).
+
 part1_test() ->
-    85432 = solve("input.txt").
+    ?assertEqual(85432, solve("input.txt")).
