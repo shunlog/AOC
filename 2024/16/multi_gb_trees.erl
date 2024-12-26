@@ -1,5 +1,5 @@
 -module(multi_gb_trees).
--export([add/3, take/2, take_smallest/1]).
+-export([add/3, take/2, take_smallest/1, smallest/1]).
 -include_lib("eunit/include/eunit.hrl").
 
 
@@ -27,20 +27,31 @@ take(Key, Tree) ->
             {error, key_not_found}
     end.
 
-
 %% Take the smallest key and remove it
 take_smallest(Tree) ->
-    case gb_trees:smallest(Tree) of
-        {Key, Values} ->
+    case gb_trees:is_empty(Tree) of
+        false ->
+            {Key, Values} = gb_trees:smallest(Tree),
             [Value | Rest] = Values,
             NewTree = case Rest of
                           [] -> gb_trees:delete(Key, Tree); % Remove the key if no more values exist
                           _ -> gb_trees:enter(Key, Rest, Tree)  % Otherwise put back the rest
                       end,
             {Key, Value, NewTree};
-        false ->
+        true ->
             {error, empty_tree}
     end.
+
+
+%% Take the smallest key and remove it
+smallest(Tree) ->
+    case gb_trees:is_empty(Tree) of
+        true-> {error, empty_tree};
+        false ->
+            {Key, [Value | _]} = gb_trees:smallest(Tree),
+            {Key, Value}
+    end.
+
 
 %% Test adding values
 add_values_test() ->
@@ -82,9 +93,21 @@ take_smallest_test() ->
     Tree2 = add(2, b, Tree1),
     Tree3 = add(3, c, Tree2),
     Tree4 = add(1, z, Tree3),
-    {_, Value, Tree5} = take_smallest(Tree4),
-    ?assertEqual(a, Value),
+    {Key, Value, Tree5} = take_smallest(Tree4),
+    ?assertEqual(1, Key),
     ?assert(lists:member(Value, [a, z])),
     {_, Value2, Tree6} = take_smallest(Tree5),
     ?assert(lists:member(Value2, [a, z])),
     ?assertEqual([{2, [b]}, {3, [c]}], gb_trees:to_list(Tree6)).
+
+
+%% Test reading the smallest key
+smallest_test() ->
+    Tree = gb_trees:empty(),
+    Tree1 = add(1, a, Tree),
+    Tree2 = add(2, b, Tree1),
+    Tree3 = add(3, c, Tree2),
+    Tree4 = add(1, z, Tree3),
+    {Key, Value} = smallest(Tree4),
+    ?assertEqual(1, Key),
+    ?assert(lists:member(Value, [a, z])).

@@ -67,6 +67,8 @@ solve(Filename, Part2) ->
     {StartX, StartY} = StartPos,
     StartNode = {StartX, StartY, e},
 
+
+
     case Part2 of
         false -> 
             SolveDirDist = fun(Dir) ->  
@@ -75,13 +77,13 @@ solve(Filename, Part2) ->
                                    Dist end,
             lists:min(lists:map(SolveDirDist, [e, w, n, s]));
         true ->
-            {MinDist, Paths} = search:search_all(StartNode, {EndX, EndY, e}, G, Heuristic),
+            {MinDist, Paths} = search:search(StartNode, {EndX, EndY, e}, G, Heuristic),
+            io:format("Paths: ~p~n", [Paths]),            
             Visited = sets:from_list(lists:map(fun({X, Y, _}) -> {X, Y} end, lists:flatten(Paths))),
             Unvisited = maps:filter(fun({X, Y}, Ch) -> Ch =/= $# andalso sets:is_element({X, Y}, Visited) end, Dict),
             maps:size(Unvisited)
             
     end. 
-           
 
 
 part1_ex1_test() ->
