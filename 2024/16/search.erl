@@ -12,7 +12,6 @@ search(Start, Goal, Graph, Heuristic) ->
 
 
 search_loop(Goal, Graph, Heuristic, Open, Gscores, Fscores, CameFrom) ->
-    io:format("Open: ~p~n", [gb_trees:to_list(Open)]),
     case multi_gb_trees:take_smallest(Open) of 
         {_, Node, Open2} ->
             if Node =:= Goal ->
@@ -60,10 +59,11 @@ update_neighbors_loop([{Neighbor, Cost} | Rest], Node, Heuristic, Open, Gscores,
        true ->
             %% Found a better or equally good path to node
             NewCameFrom = if Tentative_Gscore < Neighbor_Gscore ->
-                                  CameFrom#{Neighbor => [Node]};
+                                  CameFrom#{Neighbor => sets:from_list([Node])};
                              %% equally good path
                              Tentative_Gscore == Neighbor_Gscore -> 
-                                  CameFrom#{Neighbor => [Node | maps:get(Neighbor, CameFrom, [])]}
+                                  Set = maps:get(Neighbor, CameFrom, sets:new()),
+                                  CameFrom#{Neighbor => sets:add_element(Node, Set)}
                           end,
             NewGscores = Gscores#{Neighbor => Tentative_Gscore},
             H = Heuristic(Neighbor),
@@ -76,28 +76,29 @@ update_neighbors_loop([{Neighbor, Cost} | Rest], Node, Heuristic, Open, Gscores,
                          
 
 trace(Goal, CameFrom) ->
-    io:format("~p~n", [CameFrom]),
     trace(Goal, CameFrom, Goal, []).
 
 trace(Goal, CameFrom, Node, Path) ->
     case maps:get(Node, CameFrom, nil) of
         nil -> [[Node | Path]];
-        NodesList -> lists:foldl(
-                       fun(L, Acc) -> Acc ++ L end,
-                       [],
-                       lists:map(fun(PrevNode) -> trace(Goal, CameFrom, PrevNode, [Node | Path]) end,
-                                 NodesList))
+        NodesSet -> lists:foldl(
+                      fun(L, Acc) -> Acc ++ L end,
+                      [],
+                      lists:map(fun(PrevNode) -> trace(Goal, CameFrom, PrevNode, [Node | Path]) end,
+                                 sets:to_list(NodesSet)))
     end.
 
                       
 trace_path_test() ->
-    ?assertEqual([[a, b]], trace(b, #{b => [a]})),
-    CameFrom = #{c => [a],f => [b],b => [a],d => [c],e => [d],z => [e]},
+    ?assertEqual([[a, b]], trace(b, #{b => sets:from_list([a])})),
+    CameFromLists = #{c => [a],f => [b],b => [a],d => [c],e => [d],z => [e]},
+    CameFrom = maps:map(fun(K, V) -> sets:from_list(V) end, CameFromLists),
     ?assertEqual([[a, c, d, e, z]], trace(z, CameFrom)).
 
                      
 trace_multiple_test() ->
-    CameFrom = #{z => [c, b], b => [a, d], d => [a], c => [a]},
+    CameFromLists = #{z => [c, b], b => [a, d], d => [a], c => [a]},
+    CameFrom = maps:map(fun(K, V) -> sets:from_list(V) end, CameFromLists),
     Paths = trace(z, CameFrom),
     ?assertEqual(3, length(Paths)),
     ?assert(lists:member([a, d, b, z], Paths)),

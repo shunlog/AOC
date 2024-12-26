@@ -40,17 +40,28 @@ solve(Filename, Part2) ->
                               end
             end,
 
-    %% Add the outgoing edges for the east node of the given position
+    {EndX, EndY} = EndPos,
+
+    %% Add the outgoing edges for the east node of the given position:
+    %% Note: Since we don't care in which direction you end up being oriented when you reach the goal square,
+    %% We'll represent the goal square as a singe node: {X, Y, goal}.
     AddEdges = fun(X, Y, Dir, Map) ->
                        {Nx, Ny} = Delta(X, Y, Dir),
                        TurnEdges = [{{X, Y, maps:get(Dir, CCW)}, 1000},
                                     {{X, Y, maps:get(Dir, CW)}, 1000}],
+                       CurChar = maps:get({X, Y}, Dict),
                        Edges = case maps:get({Nx, Ny}, Dict) of
                                    Ch when Ch =/= $# -> 
-                                       TurnEdges ++ [{{Nx, Ny, Dir}, 1}];
+                                       if {Nx, Ny} == EndPos ->
+                                               %% Don't split the goal square into 4 nodes
+                                               TurnEdges ++ [{{Nx, Ny, goal}, 1}];
+                                          true ->
+                                               TurnEdges ++ [{{Nx, Ny, Dir}, 1}] 
+                                       end;
                                    _ -> TurnEdges
                                end,
-                       maps:put({X, Y, Dir}, Edges, Map)
+                       Node = case CurChar of $E -> {X, Y, goal}; _ -> {X, Y, Dir} end,
+                       maps:put(Node, Edges, Map)
                end,
 
     G = lists:foldl(fun({{X, Y}, Ch}, AccMap) ->
@@ -61,28 +72,19 @@ solve(Filename, Part2) ->
                     end,
                     #{}, 
                     Coords),
-
-    {EndX, EndY} = EndPos,
+    
     Heuristic = fun({X, Y, _}) -> abs(X - EndX) + abs(Y - EndY) end,
     {StartX, StartY} = StartPos,
     StartNode = {StartX, StartY, e},
 
-
-
     case Part2 of
         false -> 
-            SolveDirDist = fun(Dir) ->  
-                                   {Dist, _} = search:search(StartNode, 
-                                                             {EndX, EndY, Dir}, G, Heuristic),
-                                   Dist end,
-            lists:min(lists:map(SolveDirDist, [e, w, n, s]));
+            {MinDist, Paths} = search:search(StartNode, {EndX, EndY, goal}, G, Heuristic),
+            MinDist;
         true ->
-            {MinDist, Paths} = search:search(StartNode, {EndX, EndY, e}, G, Heuristic),
-            io:format("Paths: ~p~n", [Paths]),            
-            Visited = sets:from_list(lists:map(fun({X, Y, _}) -> {X, Y} end, lists:flatten(Paths))),
-            Unvisited = maps:filter(fun({X, Y}, Ch) -> Ch =/= $# andalso sets:is_element({X, Y}, Visited) end, Dict),
-            maps:size(Unvisited)
-            
+            {MinDist, Paths} = search:search(StartNode, {EndX, EndY, goal}, G, Heuristic),
+            VisitedNodes = sets:from_list(lists:map(fun({X, Y, _}) -> {X, Y} end, lists:flatten(Paths))),
+            sets:size(VisitedNodes)
     end. 
 
 
@@ -94,3 +96,12 @@ part1_ex2_test() ->
 
 part1_test() ->
     ?assertEqual(85432, solve("input.txt", false)).
+
+part2_ex1_test() ->
+    ?assertEqual(45, solve("example1.txt", true)).
+
+part2_ex2_test() ->
+    ?assertEqual(64, solve("example2.txt", true)).
+
+part2_test() ->
+    ?assertEqual(465, solve("input.txt", true)).
