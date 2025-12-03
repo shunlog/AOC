@@ -16,9 +16,9 @@ def test_ex1_p2():
 
 def test_input_p1():
     inp = read_file("input.txt")
-    assert solve(inp) == 1076
+    assert solve(inp) == 1139
 
 
 def test_input_p2():
     inp = read_file("input.txt")
-    assert solve(inp, True) == 6379
+    assert solve(inp, True) == 6684
