@@ -3,8 +3,8 @@ Put the inputs in `input.txt` and `example1.txt`
 # solves input.txt
 $ ./main.py
 
-# solves example.txt for part 1, turns on logging
-$ ./main.py -v -1 example.txt
+# solves example1.txt for part 1, turns on logging
+$ ./main.py -v -1 example1.txt
 
 # run the tests
 $ pytest 
