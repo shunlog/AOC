@@ -7,5 +7,18 @@ $ ./main.py
 $ ./main.py -v -1 example1.txt
 
 # run the tests
-$ pytest 
+$ pytest
+
+# run the tests for example input, part 2
+$ pytest -k "p2 and ex"
+```
+
+To test individual functions inside `main.py`:
+```python
+def test_foo():
+    ic.enable()
+    assert foo(1) == 2
+```
+```sh
+$ pytest main.py
 ```
