@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+import sys
 from icecream import ic
 
+ic.disable()
 
-def solve(inp):
+def solve1(inp):
     dial = 50
     res = 0
     for ins in inp.strip().split():
@@ -27,29 +30,35 @@ def solve2(inp):
         else:
             res += (dial + cnt) // 100
             dial = (dial + cnt) % 100
-            
+
         ic(ins, dial, res)
     return res
 
 
-inp1 = """L68
-L30
-R48
-L5
-R60
-L55
-L1
-L99
-R14
-L82"""
+def solve(inp, part2=False):
+    if part2:
+        return solve2(inp)
+    return solve1(inp)
 
-ic.enable()
-assert solve(inp1) == 3
-assert solve2(inp1) == 6
 
-ic.disable()
+if __name__ == "__main__":
+    '''
+    $ ./main.py                    # reads input.txt
+    $ ./main.py -v -1 example.txt   # turns on logging, run only part 1
+    '''
 
-with open("d1.txt") as f:
-    txt = f.read()
-    print(solve(txt))
-    print(solve2(txt))
+    last_arg = sys.argv[-1]
+    if '.txt' in last_arg:
+        fn = last_arg
+    else:
+        fn = "input.txt"
+    with open(fn) as f:
+        inp = f.read()
+
+    if '-v' in sys.argv:
+        ic.enable()
+        
+    if '-2' not in sys.argv:
+        print(solve(inp, False))
+    if '-1' not in sys.argv:
+        print(solve(inp, True))
