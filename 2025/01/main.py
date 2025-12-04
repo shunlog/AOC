@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from icecream import ic
+from math import floor
 
 ic.disable()
 
@@ -18,15 +19,38 @@ def solve1(inp):
     return res
 
 
+def shift_left(dial: int, shift: int) -> tuple[int, int]:
+    '''Returns count of 0's ticked, and resulting dial
+    e.g. shift_left(1, 2) -> (1, 99)
+    '''
+    dial2 = (dial - shift) % 100
+    zeros = abs(floor((dial - shift) / 100))
+    if dial2 == 0:
+        zeros += 1
+    if dial == 0:
+        zeros -= 1
+    return zeros, dial2
+
+
+def test_shift_left():
+    ic.enable()
+    assert shift_left(50, 1) == (0, 49)
+    assert shift_left(1, 1) == (1, 0)
+    assert shift_left(0, 1) == (0, 99)
+    assert shift_left(50, 100) == (1, 50)
+    assert shift_left(50, 200) == (2, 50)
+    assert shift_left(50, 50) == (1, 0)
+    assert shift_left(0, 200) == (2, 0)
+
+    
 def solve2(inp):
     dial = 50
     res = 0
     for ins in inp.strip().split():
         dirn, cnt = ins[:1], int(ins[1:])
         if dirn == 'L':
-            res += abs((dial - cnt) // 100)
-            dial = (dial - cnt) % 100
-
+            zeros, dial = shift_left(dial, cnt)
+            res += zeros
         else:
             res += (dial + cnt) // 100
             dial = (dial + cnt) % 100
