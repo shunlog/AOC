@@ -10,16 +10,15 @@ def max_jolt_n(line: str, n: int) -> str:
     such that they form the largest possible number
     E.g. max_jolt_n("3132111", 3) == "332"
     '''
-    assert n <= len(line)
-    
-    def iter(start, end, remaining) -> str:
-        if remaining == 0:
-            return ""
-        maxn = max(*line[start:end])
-        idx = line.index(maxn, start, end)
-        return maxn + iter(idx+1, end+1, remaining-1)
-        
-    return iter(0, len(line) - n + 1, n)
+    res = ""
+    start = 0
+    end = len(line) - n + 1
+    for _ in range(n):
+        max_digit = max(line[start:end])
+        index = line.index(max_digit, start, end)
+        res += max_digit
+        start, end = index + 1, end + 1
+    return res
 
 
 def test_max_jolt_n():
