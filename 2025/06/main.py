@@ -2,11 +2,18 @@
 import sys
 from icecream import ic
 import math
+import more_itertools
 
 ic.disable()
 
 
-def solve1(cols, ops):
+def solve1(inp):
+    lines = inp.strip().split('\n')
+    * rows, opl = lines
+    ops = opl.split()
+    rownums = ((int(n) for n in r.split()) for r in rows)
+    cols = list(zip(*rownums))
+
     res = 0
     for col, op in zip(cols, ops):
         if op == '+':
@@ -19,35 +26,27 @@ def solve1(cols, ops):
 
 def solve2(inp):
     # assuming \n at the end of file
-    m = list(reversed(list(zip(*inp[:-1].split('\n')))))
-    ic(m)
+    lines = inp[:-1].split('\n')
+    # transpose into list of column strings
+    # e.g. ["1  +", "24  ", "356 "]
+    cols = (''.join(col) for col in zip(*lines))
+    # each group of columns is separated by empty column
+    groups = list(more_itertools.split_at(
+        cols, lambda x: x == ' '*len(lines)))
 
-    res = 0
-    nums = []
-    for l in m:
-        if l[-1] in ('+', '*'):
-            nums.append(int(''.join(l[:-1])))
-            ic(nums)
-            res += sum(nums) if l[-1] == '+' else math.prod(nums)
-            nums = []
-        elif all(ch == ' ' for ch in l):
-            continue
-        else:
-            nums.append(int(''.join(l)))
+    def compute_group(g):
+        # the operator is the last char in the first line
+        op = g[0][-1]
+        nums = (int(s[:-1]) for s in g)
+        return sum(nums) if op == '+' else math.prod(nums)
 
-    return res
+    return sum(compute_group(g) for g in groups)
 
 
 def solve(inp, part2=False):
-    lines = inp.strip().split('\n')
-    * rows, opl = lines
-    ops = opl.split()
-    rownums = ((int(n) for n in r.split()) for r in rows)
-    cols = list(zip(*rownums))
-
     if part2:
         return solve2(inp)
-    return solve1(cols, ops)
+    return solve1(inp)
 
 
 if __name__ == "__main__":
