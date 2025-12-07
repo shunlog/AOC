@@ -5,24 +5,29 @@ import functools
 ic.disable()
 
 
-def solve1(m):
+def count_splitters(m, row0, col0):
     splitters = set()
 
     @functools.lru_cache
-    def beam_splits(row, col):
+    def beam_iter(row, col):
         if row >= len(m):
-            return 0
+            return
         if m[row][col] == '^':
             splitters.add((row, col))
-            return 1 + beam_splits(row, col-1) + beam_splits(row, col+1)
+            beam_iter(row, col-1)
+            beam_iter(row, col+1)
         else:
-            return beam_splits(row+1, col)
-    beam_splits(0, m[0].index('S'))
+            beam_iter(row+1, col)
+
+    beam_iter(row0, col0)
     return len(splitters)
 
 
-def solve2(m):
+def solve1(m):
+    return count_splitters(m, 0, m[0].index('S'))
 
+
+def solve2(m):
     @functools.lru_cache
     def beams_count(row, col):
         if row >= len(m):

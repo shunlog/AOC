@@ -23,4 +23,4 @@ def test_input_p1():
 
 def test_input_p2():
     inp = read_file("input.txt")
-    assert solve(inp, True) == 0
+    assert solve(inp, True) == 36706966158365
