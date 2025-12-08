@@ -46,7 +46,7 @@ def connect(circuits, c1, c2):
 def solve1(sorted_dists):
     circuits:dict[Coord3D, set[Coord3D]] = {}
         
-    for (c1, c2), dist in sorted_dists[:1000]:
+    for (c1, c2), _dist in sorted_dists[:1000]:
         connect(circuits, c1, c2)
 
     unique_circuits = Counter(id(c) for c in circuits.values())
@@ -58,7 +58,7 @@ def solve1(sorted_dists):
 def solve2(coords, sorted_dists):
     circuits:dict[Coord3D, set[Coord3D]] = {}
     
-    for i, ((c1, c2), dist) in enumerate(sorted_dists):
+    for i, ((c1, c2), _dist) in enumerate(sorted_dists):
         connect(circuits, c1, c2)
         any_conn = next(iter(circuits.values()))
         if any_conn and len(any_conn) == len(coords):
@@ -75,7 +75,7 @@ def solve(inp, part2=False):
     coords = [Coord3D(*(int(n) for n in l.split(',')))
               for l in inp.split()]
 
-    dists:dict[tuple, float] = {}
+    dists: dict[tuple, float] = {}
     for combi in itertools.combinations(coords, 2):
         dists[combi] = coord_dist(*combi)
     sorted_dists = sorted(dists.items(), key=lambda x: x[1])
