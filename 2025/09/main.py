@@ -14,6 +14,7 @@ class Posn:
     x: int
     y: int
 
+
 @dataclass(frozen=True)
 class Seg:
     '''A rectilinear segment (parallel to one of the Cartesian axes).
@@ -24,7 +25,7 @@ class Seg:
     min_y: int
     max_x: int
     max_y: int
-    
+
     @classmethod
     def from_posns(cls, p1: Posn, p2: Posn):
         min_x, max_x = min(p1.x, p2.x), max(p1.x, p2.x)
@@ -34,11 +35,11 @@ class Seg:
     def __post_init__(self):
         if not ((self.min_x == self.max_x) or (self.min_y == self.max_y)):
             raise ValueError("Segment must be rectilinear")
-    
+
     def is_horiz(self) -> bool:
         return self.min_y == self.max_y
 
-    
+
 def segs_intersect(s1: Seg, s2: Seg) -> bool:
     '''Returns whether the two Seg's intersect.
     Overlapping does not count, thus they must be perpendicular to intersect.
@@ -71,7 +72,7 @@ class Rect:
     min_y: int
     max_x: int
     max_y: int
-    
+
     @classmethod
     def from_posns(cls, p1: Posn, p2: Posn):
         min_x, max_x = min(p1.x, p2.x), max(p1.x, p2.x)
@@ -83,7 +84,7 @@ class Rect:
 
     def height(self) -> int:
         return self.max_y - self.min_y + 1
-    
+
     def area(self) -> int:
         return self.width() * self.height()
 
@@ -103,6 +104,44 @@ class Rect:
                 Seg.from_posns(br, bl),
                 Seg.from_posns(br, tr)]
 
+    def intersects(self, s: Seg) -> bool:
+        '''Return True if a segment intersects the Rect.
+        It intersects if either the segment intersects any of the sides,
+        or the segment is on the inside but touching the sides.
+        A segment that is fully inside (maybe touching sides) also intersects it.
+        '''
+        intersects_side = any(segs_intersect(side, s)
+                              for side in self.segments())
+        # inside or touching, maybe overlapping
+        inside = (s.min_x >= self.min_x
+                  and s.max_x <= self.max_x
+                  and s.min_y >= self.min_y
+                  and s.max_y <= self.max_y)
+        overlapping = s.min_y in (self.min_y, self.max_y) if s.is_horiz() else \
+            s.min_x in (self.min_x, self.max_x)
+        return intersects_side or (inside and not overlapping)
+
+
+def test_rect_intersects():
+    # Test partitions:
+    # 1. Vertical/horizontal segment
+    # 2. Segment position:
+    #    outside, outside but touching, overlapping with side,
+    #    point inside, point touching second side, crossing over,
+    #    inside but touching sides
+    r = Rect(2, 2, 4, 4)
+    # horizontal segment, centered vertically
+    assert not r.intersects(Seg(0, 3, 1, 3))  # outside
+    assert not r.intersects(Seg(0, 3, 2, 3))  # point touching
+    assert r.intersects(Seg(0, 3, 3, 3))  # point inside
+    assert r.intersects(Seg(0, 3, 4, 3))  # point on second side
+    assert r.intersects(Seg(0, 3, 5, 3))  # crossing over
+    assert r.intersects(Seg(2, 3, 4, 3))  # inside, touching both sides
+    # horizontal, below
+    assert not r.intersects(Seg(0, 5, 3, 5))
+    # vertical, overlapping
+    assert not r.intersects(Seg(2, 1, 2, 3))
+    assert not r.intersects(Seg(4, 2, 4, 4))  # other side, fully overlapping
 
 
 def solve1(red_tiles: list[Posn]):
@@ -110,33 +149,28 @@ def solve1(red_tiles: list[Posn]):
     return max(Rect.from_posns(p1, p2).area() for (p1, p2) in pairs)
 
 
-
-# Find the outliers by looking at viz:
+# The shape looks like a circle with a narrow island cutting it in half:
 # 2287,50126
 # 94997,50126
 # 94997,48641
 # 1738,48641
 
 def solve2(red_tiles: list[Posn]):
-    segs :list[Seg] = list(Seg.from_posns(p1, p2)
-                           for (p1, p2) in itertools.pairwise(red_tiles+red_tiles[:1]))
-    pairs = itertools.combinations(red_tiles, 2)
+    segments: list[Seg] = list(Seg.from_posns(p1, p2)
+                               for (p1, p2) in itertools.pairwise(red_tiles+red_tiles[:1]))
 
     def valid_rect(r: Rect) -> bool:
-        no_points_inside = not any(r.contains(t) for t in red_tiles)
-        no_intersections = not any(segs_intersect(rect_side, seg)
-                for rect_side in r.segments()
-                for seg in segs)
-        return no_points_inside and no_intersections
+        return not any(r.intersects(seg) for seg in segments)
 
+    # There are 500 corners, so combi(500, 2) ~ 120k combinations
     max_area = 0
-    rect = None
-    for (p1, p2) in pairs:
+    combi = itertools.combinations(red_tiles, 2)
+    for (p1, p2) in combi:
         r = Rect.from_posns(p1, p2)
-        if valid_rect(r) and r.area() > max_area:
-            rect, max_area = r, r.area()
-            ic(rect, max_area)
-        
+        # Important: check area first for a speed-up
+        if r.area() > max_area and valid_rect(r):
+            max_area = r.area()
+
     return max_area
 
 
