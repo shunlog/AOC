@@ -1,131 +1,147 @@
 #!/usr/bin/env python3
+from builtins import ValueError
 import sys
 from icecream import ic
 import itertools
 import heapq
+from dataclasses import dataclass
 
 ic.disable()
 
-# A Tile is represented as a tuple (x, y)
-# interpreted as the coordinates of the tile
 
+@dataclass(frozen=True)
+class Posn:
+    x: int
+    y: int
 
-def area(t1, t2):
-    return (abs(t1[0] - t2[0]) + 1) * (abs(t1[1] - t2[1]) + 1)
+@dataclass(frozen=True)
+class Seg:
+    '''A rectilinear segment (parallel to one of the Cartesian axes).
+    Invariants:
+    - either min_x == max_x or min_y == max_y
+    '''
+    min_x: int
+    min_y: int
+    max_x: int
+    max_y: int
+    
+    @classmethod
+    def from_posns(cls, p1: Posn, p2: Posn):
+        min_x, max_x = min(p1.x, p2.x), max(p1.x, p2.x)
+        min_y, max_y = min(p1.y, p2.y), max(p1.y, p2.y)
+        return cls(min_x, min_y, max_x, max_y)
 
+    def __post_init__(self):
+        if not ((self.min_x == self.max_x) or (self.min_y == self.max_y)):
+            raise ValueError("Segment must be rectilinear")
+    
+    def is_horiz(self) -> bool:
+        return self.min_y == self.max_y
 
-def solve1(tiles):
-    combi = list(itertools.combinations(tiles, 2))
-    return max(ic(area(t1, t2)) for (t1, t2) in combi)
-
-
-def draw_margins(red_tiles, t1=None, t2=None):
-    all_tiles = set()
-    for rt1, rt2 in zip(red_tiles, red_tiles[1:]+red_tiles[:0]):
-        if rt1[1] == rt2[1]:
-            start, fin = min(rt1[0], rt2[0]), max(rt1[0], rt2[0])
-            for dx in range(fin-start+1):
-                all_tiles.add((start+dx, rt1[1]))
-        elif rt1[0] == rt2[0]:
-            start, fin = min(rt1[1], rt2[1]), max(rt1[1], rt2[1])
-            for dy in range(fin-start+1):
-                all_tiles.add((rt1[0], start+dy))
-    draw(all_tiles, t1, t2)
-
-
-def draw(points, t1=None, t2=None):
-    import matplotlib.pyplot as plt
-    xs = [p[0] for p in points]
-    ys = [p[1] for p in points]
-
-    plt.figure(figsize=(5, 5))
-    plt.scatter(xs, ys, marker='s', s=1)  # s controls pixel size (square)
-
-    if t1 and t2:
-        # draw segments
-        x1, y1 = t1
-        x2, y2 = t2
-        c1, c2, c3, c4 = ((x1, y1), (x1, y2), (x2, y2), (x2, y1))
-        for (x1, y1), (x2, y2) in ((c1, c2), (c2, c3), (c3, c4), (c1, c4)):
-            plt.plot([x1, x2], [y1, y2], color="red", linewidth=2)
-
-    plt.gca().invert_yaxis()                # optional, for matrix-style orientation
-    plt.gca().set_aspect('equal', 'box')
-    plt.grid(True, color='lightgray')
-    plt.show()
-
-
-def intersect_segs(seg1, seg2):
-    '''Returns whether the two segments intersect.
-    Assuming the segments are parallel with x- or y-axis.
-    Overlapping does not count as intersection.'''
-    if seg1[0][0] == seg1[1][0] and seg2[0][0] == seg2[1][0]:
-        # segments must be perpendicular to intersect
+    
+def segs_intersect(s1: Seg, s2: Seg) -> bool:
+    '''Returns whether the two Seg's intersect.
+    Overlapping does not count, thus they must be perpendicular to intersect.
+    Endpoints touching the other segment does not count either.
+    '''
+    if s1.is_horiz() == s2.is_horiz():
         return False
 
-    V, H = (seg1, seg2) if seg1[0][0] == seg1[1][0] else (seg2, seg1)
-    Vymin, Vymax = min(V[0][1], V[1][1]), max(V[0][1], V[1][1])
-    Hxmin, Hxmax = min(H[0][0], H[1][0]), max(H[0][0], H[1][0])
-    Vx, Hy = V[0][0], H[0][1]
-    return (Hxmin < Vx < Hxmax) and (Vymin < Hy < Vymax)
+    # name as horizontal and vertical
+    hs, vs = (s1, s2) if s1.is_horiz() else (s2, s1)
+    return ((hs.min_x < vs.min_x < hs.max_x)
+            and (vs.min_y < hs.min_y < vs.max_y))
 
 
 def test_intersect_segs():
-    assert intersect_segs(((0, 2), (4, 2)), ((1, 1), (1, 4)))
-    assert not intersect_segs(((0, 2), (4, 2)), ((1, 1), (1, 2)))
+    assert segs_intersect(Seg.from_posns(Posn(0, 2), Posn(4, 2)),
+                          Seg.from_posns(Posn(1, 1), Posn(1, 4)))
+    assert not segs_intersect(Seg.from_posns(Posn(0, 2), Posn(4, 2)),
+                              Seg.from_posns(Posn(1, 1), Posn(1, 2)))
 
 
-def intersect_shapes(sh1: list[tuple], sh2: list[tuple]):
-    sh1_segs = itertools.pairwise(sh1+sh1[:1])
-    sh2_segs = itertools.pairwise(sh2+sh2[:1])
-    return any(intersect_segs(s1, s2)
-               for s1 in sh1_segs
-               for s2 in sh2_segs)
+@dataclass(frozen=True)
+class Rect:
+    '''A rectilinear Rectangle (sides are parallel to the Cartesian axes).
+    Invariants:
+    - min_x <= max_x
+    - min_y <= max_y
+    '''
+    min_x: int
+    min_y: int
+    max_x: int
+    max_y: int
+    
+    @classmethod
+    def from_posns(cls, p1: Posn, p2: Posn):
+        min_x, max_x = min(p1.x, p2.x), max(p1.x, p2.x)
+        min_y, max_y = min(p1.y, p2.y), max(p1.y, p2.y)
+        return cls(min_x, min_y, max_x, max_y)
+
+    def width(self) -> int:
+        return self.max_x - self.min_x + 1
+
+    def height(self) -> int:
+        return self.max_y - self.min_y + 1
+    
+    def area(self) -> int:
+        return self.width() * self.height()
+
+    def contains(self, p: Posn) -> bool:
+        '''Returns True if point is inside rect.
+        Touching the side doesn't count as inside'''
+        return ((self.min_x < p.x < self.max_x)
+                and (self.min_y < p.y < self.max_y))
+
+    def segments(self) -> list[Seg]:
+        '''Returns the sides of the Rect as Seg's'''
+        # get the 4 corners
+        tl, tr = Posn(self.min_x, self.min_y), Posn(self.max_x, self.min_y)
+        bl, br = Posn(self.min_x, self.max_y), Posn(self.max_x, self.max_y)
+        return [Seg.from_posns(tl, tr),
+                Seg.from_posns(tl, bl),
+                Seg.from_posns(br, bl),
+                Seg.from_posns(br, tr)]
 
 
-def solve2(tiles):
 
-    def intersects_middle_gap(t1, t2):
-        # Find the outliers by looking at viz:
-        # 2287,50126
-        # 94997,50126
-        # 94997,48641
-        # 1738,48641
-        y1, y2 = t1[1], t2[1]
-        miny, maxy = min(y1, y2), max(y1, y2)
-        no_intersection = maxy < 48641 or miny > 50126
-        return not no_intersection
+def solve1(red_tiles: list[Posn]):
+    pairs = itertools.combinations(red_tiles, 2)
+    return max(Rect.from_posns(p1, p2).area() for (p1, p2) in pairs)
 
-    combi = list(itertools.combinations(tiles, 2))
-    # -> ((tile1, tile2), area)
-    areas = (((t1, t2), area(t1, t2))
-             for (t1, t2) in combi
-             if not intersects_middle_gap(t1, t2))
-    top = heapq.nlargest(100,
-                         areas,
-                         lambda t: t[1])
 
-    def rect_corners_to_points(p1, p2) -> list[tuple]:
-        x1, y1 = p1
-        x2, y2 = p2
-        return [(x1, y1), (x1, y2), (x2, y2), (x2, y1)]
 
-    for ((t1, t2), ar) in top:
-        rect_points = rect_corners_to_points(t1, t2)
-        if intersect_shapes(rect_points, tiles):
-            ic("skip", (t1, t2, ar))
-            continue
-        ic(t1, t2, ar)
-        break
+# Find the outliers by looking at viz:
+# 2287,50126
+# 94997,50126
+# 94997,48641
+# 1738,48641
 
-    if ic.enabled:
-        draw_margins(tiles, t1, t2)
+def solve2(red_tiles: list[Posn]):
+    segs :list[Seg] = list(Seg.from_posns(p1, p2)
+                           for (p1, p2) in itertools.pairwise(red_tiles+red_tiles[:1]))
+    pairs = itertools.combinations(red_tiles, 2)
 
-    return
+    def valid_rect(r: Rect) -> bool:
+        no_points_inside = not any(r.contains(t) for t in red_tiles)
+        no_intersections = not any(segs_intersect(rect_side, seg)
+                for rect_side in r.segments()
+                for seg in segs)
+        return no_points_inside and no_intersections
+
+    max_area = 0
+    rect = None
+    for (p1, p2) in pairs:
+        r = Rect.from_posns(p1, p2)
+        if valid_rect(r) and r.area() > max_area:
+            rect, max_area = r, r.area()
+            ic(rect, max_area)
+        
+    return max_area
 
 
 def solve(inp, part2=False):
-    tiles = [[int(n) for n in l.split(',')]
+    tiles = [Posn(*(int(n) for n in l.split(',')))
              for l in inp.strip().split()]
     if part2:
         return solve2(tiles)
