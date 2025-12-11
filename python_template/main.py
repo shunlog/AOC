@@ -2,7 +2,6 @@
 import sys
 from icecream import ic
 
-ic.disable()
 
 def solve1(inp):
     return 0
@@ -12,7 +11,12 @@ def solve2(inp):
     return 0
 
 
-def solve(inp, part2=False):
+def solve(inp, part2=False, debug=False):
+    if debug:
+        ic.enable()
+    else:
+        ic.disable()
+
     if part2:
         return solve2(inp)
     return solve1(inp)
@@ -34,7 +38,7 @@ if __name__ == "__main__":
 
     if '-v' in sys.argv:
         ic.enable()
-        
+
     if '-2' not in sys.argv:
         print(solve(inp, False))
     if '-1' not in sys.argv:
