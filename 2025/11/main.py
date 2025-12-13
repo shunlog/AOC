@@ -50,12 +50,13 @@ def solve2(graph):
             return 1
         return sum(paths(parent, start, parents) for parent in parents[node])
 
-    return (ic(paths("fft", "svr", parents_without_dac))
-            * paths("dac", "fft", parents)
-            * paths("out", "dac", parents_without_fft)) \
-        + (paths("dac", "svr", parents_without_fft)
-           * paths("fft", "dac", parents)
-           * paths("out", "fft", parents_without_dac))
+    paths_fft_dac = (ic(paths("fft", "svr", parents_without_dac))
+                     * paths("dac", "fft", parents)
+                     * paths("out", "dac", parents_without_fft))
+    paths_dac_fft = (paths("dac", "svr", parents_without_fft)
+                     * paths("fft", "dac", parents)
+                     * paths("out", "fft", parents_without_dac))
+    return ic(paths_fft_dac) + ic(paths_dac_fft)
 
 
 def solve(inp, part2=False, debug=False):
@@ -89,10 +90,9 @@ if __name__ == "__main__":
     with open(fn) as f:
         inp = f.read()
 
-    if '-v' in sys.argv:
-        ic.enable()
+    debug = '-v' in sys.argv
 
     if '-2' not in sys.argv:
-        print(solve(inp, False))
+        print(solve(inp, False, debug))
     if '-1' not in sys.argv:
-        print(solve(inp, True))
+        print(solve(inp, True, debug))
